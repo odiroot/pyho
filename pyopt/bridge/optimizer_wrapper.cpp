@@ -13,7 +13,6 @@
 #include "evalcoil.h"
 #include "utils/redirecter.h"
 #include "mathconst.h"
-#include "simplejson/JSON.h"
 
 using namespace std;
 
@@ -218,6 +217,7 @@ int eval_server(const char* address) {
         cout << ((char*)args.data())[i];
     }
     cout << endl;
+
 
     return 0;
 }
