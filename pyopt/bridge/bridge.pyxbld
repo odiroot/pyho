@@ -14,8 +14,7 @@ COIL_MODULES = [
 
 def make_ext(modname, pyxfilename):
     this_dir = path.dirname(path.abspath(__file__))
-    CB = path.abspath(path.join(this_dir, path.pardir, path.pardir,
-        "coil", "block"))
+    CB = path.abspath(path.join(this_dir, path.pardir,"coil"))
 
     COIL_PATHS = [path.join(CB, m) for m in COIL_MODULES]
     COIL_PATHS.append(path.join(this_dir, "optimizer_wrapper.cpp"))

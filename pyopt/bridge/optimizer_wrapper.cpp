@@ -7,8 +7,8 @@
 #include "latticegrid.h"
 #include "paramcoil.h"
 #include "evalcoil.h"
-#include "../../opt/utils/redirecter.h"
-#include "../../coil/block/mathconst.h"
+#include "utils/redirecter.h"
+#include "mathconst.h"
 using namespace std;
 
 void c_print(const char* text) {
