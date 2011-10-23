@@ -20,6 +20,8 @@ cdef extern from "optimizer_wrapper.h":
     int ARG_BY
     int ARG_BZ
 
+    int eval_server(char* address)
+
 cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
@@ -76,3 +78,6 @@ def bfun(object genome):
     free(t)
     return res
 
+def start_eval_server(address_string):
+    cdef int res
+    res = eval_server(address_string)

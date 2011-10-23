@@ -1,7 +1,11 @@
 #include <cstdlib>
-//#include <cstring>
+#include <unistd.h>
 #include <math.h>
+#include <string>
+#include <iostream>
 #include <fstream>
+#include <zmq.hpp>
+
 #include "optimizer_wrapper.h"
 #include "ptreal.h"
 #include "latticegrid.h"
@@ -9,6 +13,8 @@
 #include "evalcoil.h"
 #include "utils/redirecter.h"
 #include "mathconst.h"
+#include "simplejson/JSON.h"
+
 using namespace std;
 
 void c_print(const char* text) {
@@ -196,4 +202,22 @@ float bFun(float t[]) {
     }
     
     return obj;
+}
+
+int eval_server(const char* address) {
+    using namespace zmq;
+    
+    context_t context(1);
+    socket_t socket(context, ZMQ_REP);
+    socket.bind(address);
+
+
+    message_t args;
+    socket.recv(&args);
+    for(int i = 0; i < (int)args.size(); i++) {
+        cout << ((char*)args.data())[i];
+    }
+    cout << endl;
+
+    return 0;
 }

@@ -20,5 +20,7 @@ const int ARG_BX = 1;
 const int ARG_BY = 2;
 const int ARG_BZ = 4;
 
+int eval_server(const char* address);
+
 }
 #endif
