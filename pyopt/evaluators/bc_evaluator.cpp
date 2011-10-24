@@ -1,17 +1,12 @@
 #include <cstdlib>
-#include <unistd.h>
 #include <math.h>
-#include <string>
-#include <iostream>
 #include <fstream>
 #include <zmq.hpp>
 
-#include "optimizer_wrapper.h"
 #include "ptreal.h"
 #include "latticegrid.h"
 #include "paramcoil.h"
 #include "evalcoil.h"
-#include "utils/redirecter.h"
 #include "mathconst.h"
 
 using namespace std;
@@ -20,9 +15,10 @@ void c_print(const char* text) {
     cout << text << endl;
 }
 
-/** WRAPPING OPTIMIZER **/
 // General purpose variables
-ofstream logFile;
+const int ARG_BX = 1;                                                           
+const int ARG_BY = 2;                                                           
+const int ARG_BZ = 4; 
 // Coil parameters
 static real* myMin = 0;
 static real* myMax = 0;
@@ -36,12 +32,6 @@ int cntrComps[3];
 Pt_real Bwanted;
 double wantedNorm;
 
-
-void redirect_log(const char* path) {
-    logFile.open(path);
-    //redirecter* redir =
-    new redirecter(logFile, cout);
-}
 
 void get_coil(const char* coil_path) {
     ifstream cstream(coil_path);
@@ -203,11 +193,11 @@ float bFun(float t[]) {
     return obj;
 }
 
-int eval_server(const char* address) {
+int main(int argc, char** argv) {
     using namespace zmq;
     
     context_t context(1);
-    socket_t socket(context, ZMQ_REP);
+    /*socket_t socket(context, ZMQ_REP);
     socket.bind(address);
 
 
@@ -216,7 +206,7 @@ int eval_server(const char* address) {
     for(int i = 0; i < (int)args.size(); i++) {
         cout << ((char*)args.data())[i];
     }
-    cout << endl;
+    cout << endl;*/
 
 
     return 0;

@@ -3,10 +3,6 @@ from pyevolve.G1DList import G1DList
 from pyevolve.GSimpleGA import GSimpleGA
 from pyevolve.Initializators import G1DListInitializatorReal
 from pyevolve.Consts import minimaxType
-
-import pyximport
-pyximport.install()
-from bridge import bridge
 from utils import cli_arguments
 
 
@@ -30,11 +26,10 @@ def main():
 
     #packed_args = dict(args._get_kwargs())
     #socket.send_json(packed_args)
-    #bridge.start_eval_server(addr)
+    # TODO: Start daemons
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     #bridge.prepare(args)
-
     # Pull optimization constraints from C++ layer.
     #no_vars, my_min, my_max = bridge.get_optimization_params()
 
