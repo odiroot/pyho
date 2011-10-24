@@ -18,19 +18,19 @@ def objective(chromosome):
 def main():
     u"`optimizer_ga` logic"
     # Parsing command line arguments.
-    args = cli_arguments().parse_args()
+    args, unknown = cli_arguments().parse_known_args()
+    eval_args = ' '.join(unknown)
+    
 
+    #import zmq
+    #addr = "ipc:///tmp/eval"
+    #context = zmq.Context()
+    #socket = context.socket(zmq.REQ)
+    #socket.connect(addr)
 
-    import zmq
-    addr = "ipc:///tmp/eval"
-    context = zmq.Context()
-    socket = context.socket(zmq.REQ)
-    socket.connect(addr)
-
-    packed_args = dict(args._get_kwargs())
-    socket.send_json(packed_args)
-
-    bridge.start_eval_server(addr)
+    #packed_args = dict(args._get_kwargs())
+    #socket.send_json(packed_args)
+    #bridge.start_eval_server(addr)
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     #bridge.prepare(args)
