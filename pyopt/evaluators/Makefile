@@ -1,4 +1,4 @@
-HEADERS="-I../coil/"
+HEADERS="-I../blockcoil/"
 LIBS="-lzmq"
 
 all: bc_evaluator
@@ -10,28 +10,28 @@ bc_evaluator.o: bc_evaluator.cpp
 	g++ bc_evaluator.cpp -c ${HEADERS}
 
 ptreal.o:
-	g++ ../coil/ptreal.cpp -c 
+	g++ ../blockcoil/ptreal.cpp -c 
 
 paramcoil.o:
-	g++ ../coil/paramcoil.cpp -c 
+	g++ ../blockcoil/paramcoil.cpp -c 
 
 blockcoil.o:
-	g++ ../coil/blockcoil.cpp -c 
+	g++ ../blockcoil/blockcoil.cpp -c 
 
 cblock.o:
-	g++ ../coil/cblock.cpp -c 
+	g++ ../blockcoil/cblock.cpp -c 
 
 plane.o:
-	g++ ../coil/plane.cpp -c 
+	g++ ../blockcoil/plane.cpp -c 
 
 evalcoil.o:
-	g++ ../coil/evalcoil.cpp -c 
+	g++ ../blockcoil/evalcoil.cpp -c 
 
 errhandler.o:
-	g++ ../coil/errhandler.cpp -c 
+	g++ ../blockcoil/errhandler.cpp -c 
 
 latticegrid.o:
-	g++ ../coil/latticegrid.cpp -c 
+	g++ ../blockcoil/latticegrid.cpp -c 
 
 clean:
 	rm -f bc_evaluator
