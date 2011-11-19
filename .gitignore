@@ -4,3 +4,4 @@
 *.pyxbldc
 *.o
 bc_evaluator
+assets/output/*
