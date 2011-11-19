@@ -4,7 +4,7 @@ import sys
 import time
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(currdir, "libs"))
+sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 import pyximport
 pyximport.install()
 
