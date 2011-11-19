@@ -1,0 +1,30 @@
+#include "mathconst.h"
+
+#ifndef optimizer_wrapper_h
+#define optimizer_wrapper_h
+extern "C" {
+
+void c_print(const char* text);
+void redirect_log(const char* path);
+void get_coil(const char* coil_path);
+void prepare_constraints();
+void get_grid(const char* grid_path);
+void cost_function(float Bx, float By, float Bz, int flag);
+void prepare_reference_value();
+
+int get_no_design_vars();
+real* get_my_min();
+real* get_my_max();
+
+float bFun(real t[]);
+void print_best_coil(real t[]);
+void output_cblock(const char* path);
+void rebuild_grid(int fine);
+void output_xml(char* path, real t[]);
+
+const int ARG_BX = 1;
+const int ARG_BY = 2;
+const int ARG_BZ = 4;
+
+}
+#endif
