@@ -5,3 +5,4 @@
 *.o
 bc_evaluator
 assets/output/*
+canal.log
