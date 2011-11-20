@@ -49,11 +49,13 @@ def cli_arguments():
         type=int, help=u"start the evolution with a specified random seed")
     # Not much use right now.
     #apars.add_argument("-algorithm", dest="algorithm",
-    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")    
+    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
     apars.add_argument("-ngen", metavar="<value>", dest="ngen",
         type=int, help=u"number of GA generations to run")
     apars.add_argument("-popsize", metavar="<value>", dest="popsize",
-        type=int, help=u"size of the GA population")    
+        type=int, help=u"size of the GA population")
+    apars.add_argument("-allele", metavar="<switch>", dest="allele",
+        type=bool, help=u"Whether to use Allele operators", default=False)
     return apars
 
 
@@ -61,18 +63,20 @@ def color_print(text, bold=False, color='32', target=None):
     if bold:
         color = "1;%s" % color
     text = "\033[%sm%s\033[0m" % (color, text)
-    print >> target or sys.stdout, text    
+    print >> target or sys.stdout, text
+
 
 def error_print(text):
     color_print(text, color="31", target=sys.stderr)
-    
+
+
 def exit_error(text):
     "Stop program execution and print error string to stderr"
     text = "\n" + text + "\nExiting abnormally\n"
     error_print(text)
     sys.exit(-1)
 
-    
+
 class Timer(object):
     u"A simple timer utility with lap feature"
     def __init__(self):
@@ -80,16 +84,16 @@ class Timer(object):
         self.t2 = 0
         self.t1lap = 0
         self.time_so_far = 0
-    
+
     def start(self):
         self.t1 = time.time()
         self.t1lap = time.time()
         return self
-    
+
     def stop(self):
         self.t2 = time.time()
-        return self.t2 - self.t1 
-        
+        return self.t2 - self.t1
+
     def lap(self):
         self.t2 = time.time()
         tmp = self.t2 - self.t1lap
@@ -104,15 +108,15 @@ class RedirecredWriter(object):
         self._old_stdout = sys.stdout
         self.print_func = print_func
         sys.stdout = self
-        
+
     def __del__(self):
         sys.stdout = self._old_stdout
-    
+
     def write(self, *args):
         text = args[0]
         if text != '\n':
             self.print_func(text)
-    
+
 
 __all__ = ["cli_arguments", "error_print", "exit_error", "RedirecredWriter",
     "Timer"]

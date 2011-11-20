@@ -3,6 +3,9 @@ from itertools import izip
 from random import randint, uniform, random
 from pyevolve.Consts import minimaxType
 from pyevolve.G1DList import G1DList
+from pyevolve.GAllele import GAlleleRange, GAlleles
+from pyevolve.Mutators import G1DListMutatorAllele
+from pyevolve.Initializators import G1DListInitializatorAllele
 from pyevolve.GSimpleGA import GSimpleGA
 from pyevolve import Util
 
@@ -47,7 +50,7 @@ def custom_mutator(genome, **kwargs):
     mutations = kwargs["pmut"] * (size + 1)
     mins = genome.getParam("min_constr")
     maxes = genome.getParam("max_constr")
-    
+
     if mutations < 1.0:
         mutations = 0
         for it in xrange(size + 1):
@@ -63,11 +66,11 @@ def custom_mutator(genome, **kwargs):
 
 
 def custom_crossover(genome, **kwargs):
-    u"Custom crossover operator adhering to the constraints."    
+    u"Custom crossover operator adhering to the constraints."
     mom = kwargs["mom"]
-    dad = kwargs["dad"]    
+    dad = kwargs["dad"]
     mins = mom.getParam("min_constr")
-    maxes = mom.getParam("max_constr")        
+    maxes = mom.getParam("max_constr")
     count = kwargs["count"]
     sister = None
     brother = None
@@ -96,7 +99,7 @@ def custom_crossover(genome, **kwargs):
             brother[i] = maxes[i]
 
     return (sister, brother)
-        
+
 
 class CustomG1DList(G1DList):
     def __init__(self, *args, **kwargs):
@@ -104,6 +107,18 @@ class CustomG1DList(G1DList):
         self.initializator.set(custom_initializer)
         self.mutator.set(custom_mutator)
         self.crossover.set(custom_crossover)
+
+
+class AlleleG1DList(G1DList):
+    def __init__(self, *args, **kwargs):
+        mins = kwargs.pop("constr_min")
+        maxes = kwargs.pop("constr_max")
+        G1DList.__init__(self, *args, **kwargs)
+        allele = GAlleles([GAlleleRange(b, e, True)
+            for (b, e) in zip(mins, maxes)])
+        self.setParams(allele=allele)
+        self.initializator.set(G1DListInitializatorAllele)
+        self.mutator.set(G1DListMutatorAllele)
 
 
 class CustomGSimpleGA(GSimpleGA):
