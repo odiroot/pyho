@@ -6,3 +6,9 @@
 bc_evaluator
 assets/output/*
 canal.log
+GUI/linux_x86/Bfile.txt
+GUI/linux_x86/Bgrid.txt
+GUI/linux_x86/cblockCoil.cblock
+GUI/linux_x86/coilEval.xml
+GUI/linux_x86/coilForCheckShape.param
+GUI/linux_x86/gridForCheckShape.param
