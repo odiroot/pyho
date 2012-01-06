@@ -34,7 +34,8 @@ def memoized_objective(obj_fun):
 def main():
     u"`optimizer_ga` logic"
     args = cli_arguments().parse_args()  # Parsing command line arguments.
-    RedirecredWriter(bridge.cprint)  # Redirecting all stdout prints.
+    # XXX: Disabled for debugging.
+    #RedirecredWriter(bridge.cprint)  # Redirecting all stdout prints.
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)
