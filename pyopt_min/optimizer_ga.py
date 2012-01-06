@@ -14,21 +14,25 @@ from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
 
-def objective(chromosome):
-    u"The Genetic Algorithm evaluation function"
-    raw_data = chromosome.getInternalList()
-    return bridge.bfun(raw_data)
-
-
-def memoized_objective(obj_fun):
+class MemoizedObjective(object):
+    u"Memoized objective helper with generator result."
     memo = {}
 
-    def inner_func(chromosome):
-        key = tuple(chromosome)
-        if key not in memo:
-            memo[key] = obj_fun(chromosome)
-        return memo[key]
-    return inner_func
+    def objective(self, chromosome):
+        u"The Genetic Algorithm evaluation function"
+        raw_data = chromosome.getInternalList()
+        key = tuple(raw_data)
+        # Need to compute and fill memo.
+        if key not in self.memo:
+            # Score not ready.
+            # for i in range(3):
+            #     yield None
+
+            # Score ready.
+            score = bridge.bfun(raw_data)
+            self.memo[key] = score
+            yield score
+        yield self.memo[key]
 
 
 def main():
@@ -49,7 +53,7 @@ def main():
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(memoized_objective(objective))
+    genome.evaluator.set(MemoizedObjective().objective)
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)
