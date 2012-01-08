@@ -4,59 +4,76 @@ import sys
 import time
 
 
-def cli_arguments():
-    u"Command line argument parser for PyHO options."
-    apars = argparse.ArgumentParser()
-    apars.description = u"Genetic Algorithm optimizer for coil design."
-    apars.epilog = u"""
-        This application is a part of PyHO package.        
-        XXX ATTRIBUTION DISCLAIMER
-    """
-    apars.prog = u"optimizer_ga.py"
-    # Required arguments.
-    apars.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
+class MessageType(object):
+    QUERY_CONSTRAINTS = 1
+    RESP_CONSTRAINTS = 2
+    DO_EVALUATION = 10
+    SCORE = 11
+
+    EXIT_SIGNAL = 99
+
+
+def optimizer_arguments():
+    parser = argparse.ArgumentParser()
+    parser.description = u"Genetic Algorithm optimizer for coil design."
+    parser.epilog = u"""This application is a part of PyHO package."""
+
+    # Run settings.
+    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
+        type=str, help=u"log file path")
+    parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
+        type=str, help=u"path to the stop-signalling file")
+    # Genetic Algorithm parameters.
+    parser.add_argument("-seed", metavar="<value>", dest="seed",
+        type=int, help=u"start the evolution with a specified random seed")
+    parser.add_argument("-ngen", metavar="<value>", dest="ngen",
+        type=int, help=u"number of GA generations to run")
+    parser.add_argument("-popsize", metavar="<value>", dest="popsize",
+        type=int, help=u"size of the GA population")
+    parser.add_argument("-allele", metavar="<switch>", dest="allele",
+        type=bool, help=u"Whether to use Allele operators", default=False)
+    # Not much use right now.
+    #parser.add_argument("-algorithm", dest="algorithm",
+    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
+    return parser
+
+
+def evaluator_arguments():
+    parser = argparse.ArgumentParser()
+    parser.description = u"Coil evaluator for optimal coil design."
+    parser.epilog = u"""This application is a part of PyHO package."""
+
+    # Input files.
+    parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
         required=True, type=str, help=u"model coil definition")
-    apars.add_argument("-grid", metavar="<grid-file>", dest="grid",
+    parser.add_argument("-grid", metavar="<grid-file>", dest="grid",
         required=True, type=str, help=u"grid for optimization")
-    apars.add_argument("-fine", metavar="<density>", dest="density",
-        required=True, type=int, help=u"grid density for final evaluation")
-    apars.add_argument("-xml", metavar="<out-xml-file>", dest="outxml",
+    # Output files.
+    parser.add_argument("-xml", metavar="<out-xml-file>", dest="outxml",
         type=str, help=u"output of the optimization process")
-    apars.add_argument("-cblock", metavar="<out-cblock-file>", dest="outcb",
+    parser.add_argument("-cblock", metavar="<out-cblock-file>", dest="outcb",
         type=str, help=u"???")
-    apars.add_argument("-Bfile", metavar="<out-field-file>", dest="outfield",
-        #required=True,
-        type=str, help=u"???")
-    # Optional arguments.
-    apars.add_argument("-Bx", metavar="<value>", dest="Bx",
+    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
+        type=str, help=u"log file path")
+    # Model parameters.
+    parser.add_argument("-fine", metavar="<density>", dest="density",
+        required=True, type=int, help=u"grid density for final evaluation")
+    parser.add_argument("-Bx", metavar="<value>", dest="Bx",
         type=float, help=u"set desired absolute value of "
         "the Bx component")
-    apars.add_argument("-By", metavar="<value>", dest="By",
+    parser.add_argument("-By", metavar="<value>", dest="By",
         type=float, help=u"set desired absolute value of "
         "the By component")
-    apars.add_argument("-Bz", metavar="<value>", dest="Bz",
+    parser.add_argument("-Bz", metavar="<value>", dest="Bz",
         type=float, help=u"set desired absolute value of "
         "the Bz component")
-    apars.add_argument("-statistics", dest="statistics", action="store_true",
-        help=u"???")
-    apars.add_argument("-log", metavar="<logfile>", dest="logfile",
-        type=str, help=u"log file path")
-    apars.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
-        type=str, help=u"path to the stop-signalling file")
-
-    # Genetic Algorithm parameters.
-    apars.add_argument("-seed", metavar="<value>", dest="seed",
-        type=int, help=u"start the evolution with a specified random seed")
-    # Not much use right now.
-    #apars.add_argument("-algorithm", dest="algorithm",
-    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
-    apars.add_argument("-ngen", metavar="<value>", dest="ngen",
-        type=int, help=u"number of GA generations to run")
-    apars.add_argument("-popsize", metavar="<value>", dest="popsize",
-        type=int, help=u"size of the GA population")
-    apars.add_argument("-allele", metavar="<switch>", dest="allele",
-        type=bool, help=u"Whether to use Allele operators", default=False)
-    return apars
+    # Not used right now.
+    # parser.add_argument("-Bfile", metavar="<out-field-file>", dest="outfield",
+    #     #required=True,
+    #     type=str, help=u"???")
+    # parser.add_argument("-statistics", dest="statistics", action="store_true",
+    #     help=u"???")
+    return parser
 
 
 def color_print(text, bold=False, color='32', target=None):
@@ -116,7 +133,3 @@ class RedirecredWriter(object):
         text = args[0]
         if text != '\n':
             self.print_func(text)
-
-
-__all__ = ["cli_arguments", "error_print", "exit_error", "RedirecredWriter",
-    "Timer"]

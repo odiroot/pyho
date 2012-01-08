@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 import os
 import sys
-import time
+import zmq
+
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
-import pyximport
-pyximport.install()
 
-from bridge import bridge
-from utils import cli_arguments, Timer, RedirecredWriter
+from utils import optimizer_arguments, Timer, MessageType
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
@@ -36,15 +34,27 @@ class MemoizedObjective(object):
 
 
 def main():
-    u"`optimizer_ga` logic"
-    args = cli_arguments().parse_args()  # Parsing command line arguments.
-    # XXX: Disabled for debugging.
-    #RedirecredWriter(bridge.cprint)  # Redirecting all stdout prints.
+    # TODO:
+    # 1. Fetch constraints (no_vars, maxes, mins)
+    # 2. Connect objective via ZeroMQ
+    # 3. After evolution print gest best info.
+    # 4. Saving output files.
+    # 5. Output messages transport via PUB/SUB.
+    args = optimizer_arguments().parse_args()
 
-    # Prepare the C++ layer of optimizer through the Cython bridge.
-    bridge.prepare(args)
-    # Pull optimization constraints from C++ layer.
-    no_vars, my_min, my_max = bridge.get_optimization_params()
+    # Prepare the ZeroMQ communication layer.
+    ctx = zmq.Context()
+    socket = ctx.socket(zmq.REQ)
+    socket.connect("tcp://localhost:5555")
+
+    # Fetch constraints from any worker.
+    socket.send_json({"type": MessageType.QUERY_CONSTRAINTS})
+    resp = socket.recv_json()
+    if resp["type"] != MessageType.RESP_CONSTRAINTS:
+        raise ValueError("Wrong response type from the transport.")
+    no_vars = resp["no_vars"]
+    my_min = resp["min_constr"]
+    my_max = resp["max_constr"]
 
     # Prepare the GA engine.
     # Initialize genome with constraints.
@@ -71,20 +81,19 @@ def main():
     # Evolution is stoped.
     run_time = timer.stop()
     print "GA finished in %g s." % run_time
-    bridge.print_best(ga.bestIndividual().getInternalList())
+    # bridge.print_best(ga.bestIndividual().getInternalList())
 
-    # CBlock output.
-    if args.outcb:
-        bridge.save_cblock(args.outcb)
-    # Rebuild grid with new density if fine is specified.
-    if args.density:
-        bridge.rebuild(args.density)
-    # XML output.
-    if args.outxml:
-        bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList())
+    # # CBlock output.
+    # if args.outcb:
+    #     bridge.save_cblock(args.outcb)
+    # # Rebuild grid with new density if fine is specified.
+    # if args.density:
+    #     bridge.rebuild(args.density)
+    # # XML output.
+    # if args.outxml:
+    #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList())
 
     # TODO: Bfile.
 
 if __name__ == '__main__':
-    start = time.time()
     main()
