@@ -39,6 +39,14 @@ def main():
                 "max_constr": max_constr,
             })
 
+        elif msgtype == MessageType.DO_EVALUATION:
+            params = message["params"]
+            score = bridge.bfun(params)
+            socket.send_json({
+                "type": MessageType.SCORE,
+                "score": score,
+            })
+
         elif msgtype == MessageType.EXIT_SIGNAL:
             print "Exiting due to a remote command..."
             sys.exit(0)

@@ -4,6 +4,10 @@ import sys
 import time
 
 
+class MessageTypeError(ValueError):
+    message = "Wrong response type from the transport."
+
+
 class MessageType(object):
     QUERY_CONSTRAINTS = 1
     RESP_CONSTRAINTS = 2

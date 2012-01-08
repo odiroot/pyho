@@ -7,7 +7,7 @@ import zmq
 currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
-from utils import optimizer_arguments, Timer, MessageType
+from utils import optimizer_arguments, Timer, MessageType, MessageTypeError
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
@@ -16,18 +16,29 @@ class MemoizedObjective(object):
     u"Memoized objective helper with generator result."
     memo = {}
 
+    def __init__(self, socket=None):
+        self.socket = socket
+
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
         raw_data = chromosome.getInternalList()
         key = tuple(raw_data)
         # Need to compute and fill memo.
         if key not in self.memo:
-            # Score not ready.
-            # for i in range(3):
-            #     yield None
+            # TODO: Score not ready.
+            # yield None
 
-            # Score ready.
-            score = bridge.bfun(raw_data)
+            # Request coil evaluation.
+            self.socket.send_json({
+                "type": MessageType.DO_EVALUATION,
+                "params": list(chromosome),
+            })
+            # Wait for the result and pass it.
+            resp = self.socket.recv_json()
+            if resp["type"] != MessageType.SCORE:
+                raise MessageTypeError()
+            score = resp["score"]
+
             self.memo[key] = score
             yield score
         yield self.memo[key]
@@ -51,7 +62,7 @@ def main():
     socket.send_json({"type": MessageType.QUERY_CONSTRAINTS})
     resp = socket.recv_json()
     if resp["type"] != MessageType.RESP_CONSTRAINTS:
-        raise ValueError("Wrong response type from the transport.")
+        raise MessageTypeError()
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
@@ -63,7 +74,7 @@ def main():
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(MemoizedObjective().objective)
+    genome.evaluator.set(MemoizedObjective(socket).objective)
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)
