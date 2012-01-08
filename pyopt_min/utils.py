@@ -27,6 +27,9 @@ def optimizer_arguments():
         type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
         type=str, help=u"path to the stop-signalling file")
+    parser.add_argument("-workers", metavar="<address>", dest="workers",
+        type=str, nargs="*", default=["localhost:5555"],
+        help=u"Message transport listen addresses of the workers")
     # Genetic Algorithm parameters.
     parser.add_argument("-seed", metavar="<value>", dest="seed",
         type=int, help=u"start the evolution with a specified random seed")
@@ -47,6 +50,11 @@ def evaluator_arguments():
     parser.description = u"Coil evaluator for optimal coil design."
     parser.epilog = u"""This application is a part of PyHO package."""
 
+    # Run settings
+    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
+        type=str, help=u"log file path")
+    parser.add_argument("-port", metavar="<number>", dest="port",
+        type=int, help=u"Message transport listen port", default=5555)
     # Input files.
     parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
         required=True, type=str, help=u"model coil definition")
@@ -57,8 +65,6 @@ def evaluator_arguments():
         type=str, help=u"output of the optimization process")
     parser.add_argument("-cblock", metavar="<out-cblock-file>", dest="outcb",
         type=str, help=u"???")
-    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
-        type=str, help=u"log file path")
     # Model parameters.
     parser.add_argument("-fine", metavar="<density>", dest="density",
         required=True, type=int, help=u"grid density for final evaluation")

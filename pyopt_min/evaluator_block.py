@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 import os
 import sys
 import zmq
@@ -19,7 +20,7 @@ def main():
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REP)
-    socket.bind("tcp://*:5555")
+    socket.bind("tcp://*:%d" % args.port)
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)
@@ -40,6 +41,7 @@ def main():
             })
 
         elif msgtype == MessageType.DO_EVALUATION:
+            print "%s: Doing an evaluation" % datetime.now()
             params = message["params"]
             score = bridge.bfun(params)
             socket.send_json({

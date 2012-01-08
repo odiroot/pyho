@@ -15,6 +15,7 @@ from ga_common import AlleleG1DList
 class MemoizedObjective(object):
     u"Memoized objective helper with generator result."
     memo = {}
+    received = {}
 
     def __init__(self, socket=None):
         self.socket = socket
@@ -22,26 +23,7 @@ class MemoizedObjective(object):
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
         raw_data = chromosome.getInternalList()
-        key = tuple(raw_data)
-        # Need to compute and fill memo.
-        if key not in self.memo:
-            # TODO: Score not ready.
-            # yield None
-
-            # Request coil evaluation.
-            self.socket.send_json({
-                "type": MessageType.DO_EVALUATION,
-                "params": list(chromosome),
-            })
-            # Wait for the result and pass it.
-            resp = self.socket.recv_json()
-            if resp["type"] != MessageType.SCORE:
-                raise MessageTypeError()
-            score = resp["score"]
-
-            self.memo[key] = score
-            yield score
-        yield self.memo[key]
+        raise NotImplementedError
 
 
 def main():
@@ -56,7 +38,8 @@ def main():
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)
-    socket.connect("tcp://localhost:5555")
+    for addr in args.workers:
+        socket.connect("tcp://%s" % addr)
 
     # Fetch constraints from any worker.
     socket.send_json({"type": MessageType.QUERY_CONSTRAINTS})

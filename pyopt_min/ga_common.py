@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from itertools import izip
 from random import randint, uniform, random
 from pyevolve.Consts import minimaxType
@@ -241,26 +242,7 @@ class CustomGPopulation(GPopulation):
         """
         # XXX: This ignores multiprocessing at all.
 
-        to_check = self.internalPop[:]
-        # Try evaluating population until all scores are finally ready.
-        while to_check:
-            pop = to_check[:]  # Don't mess with iterated list.
-            for ind in pop:
-                # Prepare generator yielding score or waiting flag.
-                if not getattr(ind, "score_gen", False):
-                    ind.score_gen = ind.evaluator.funcList[0](ind)
-                try:
-                    score = ind.score_gen.next()
-                except StopIteration:
-                    print "Ind. already evaluated: %d" % id(ind)
-                else:
-                    # We finally received the score value.
-                    if score is not None:
-                        ind.score = score
-                        delattr(ind, "score_gen")  # Dispose of used generator.
-                        # Remove from the list of ind. to check.
-                        to_check.remove(ind)
-                    else:  # We still have to wait for the score.
-                        pass
+        # to_check = self.internalPop[:]
+        raise NotImplementedError
 
         self.clearFlags()
