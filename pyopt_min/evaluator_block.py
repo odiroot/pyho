@@ -11,7 +11,7 @@ import pyximport
 pyximport.install()
 from bridge import bridge
 
-from utils import evaluator_arguments, MessageType
+from utils import evaluator_arguments, ServerComm
 
 
 def main():
@@ -19,42 +19,41 @@ def main():
 
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
-    socket = ctx.socket(zmq.REP)
-    socket.bind("tcp://*:%d" % args.port)
+    sc = ServerComm("*:%d" % args.port, ctx)
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)
     # Pull optimization constraints from C++ layer.
     no_vars, min_constr, max_constr = bridge.get_optimization_params()
 
+    # Define request handlers.
+    def handle_constraints(data, s_id, comm):
+        resp = {
+            "no_vars": no_vars,
+            "min_constr": min_constr,
+            "max_constr": max_constr,
+        }
+        comm.send(resp, s_id, comm.RESP_CONSTRAINTS)
+
+    def handle_evaluation(data, s_id, comm):
+        print "%s: Doing an evaluation" % datetime.now()
+        params = data["params"]
+        score = bridge.bfun(params)
+        resp = {"score": score}
+        comm.send(resp, s_id, comm.SCORE)
+
+    def handle_exit(data, s_id, comm):
+        print "Exiting due to a remote command..."
+        sys.exit(0)
+
+    # Assign handlers.
+    sc[sc.QUERY_CONSTRAINTS] = handle_constraints
+    sc[sc.DO_EVALUATION] = handle_evaluation
+    sc[sc.EXIT_SIGNAL] = handle_exit
+
     while True:  # The famous Main Loop.
-        # Wait for the request, we *assume* JSON format.
-        message = socket.recv_json()
-        msgtype = message["type"]
-
-        if msgtype == MessageType.QUERY_CONSTRAINTS:
-            socket.send_json({
-                "type": MessageType.RESP_CONSTRAINTS,
-                "no_vars": no_vars,
-                "min_constr": min_constr,
-                "max_constr": max_constr,
-            })
-
-        elif msgtype == MessageType.DO_EVALUATION:
-            print "%s: Doing an evaluation" % datetime.now()
-            params = message["params"]
-            score = bridge.bfun(params)
-            socket.send_json({
-                "type": MessageType.SCORE,
-                "score": score,
-            })
-
-        elif msgtype == MessageType.EXIT_SIGNAL:
-            print "Exiting due to a remote command..."
-            sys.exit(0)
-
-        else:
-            raise ValueError("Unknown message type")
+        # Wait for the request and handle it.
+        sc.all_handle()
 
 
 if __name__ == '__main__':

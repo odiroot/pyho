@@ -2,12 +2,13 @@
 import os
 import sys
 import zmq
+import time
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
-from utils import optimizer_arguments, Timer, MessageType, MessageTypeError
+from utils import optimizer_arguments, Timer, ClientComm
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
@@ -37,18 +38,17 @@ def main():
 
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
-    socket = ctx.socket(zmq.REQ)
-    for addr in args.workers:
-        socket.connect("tcp://%s" % addr)
+    cc = ClientComm(args.workers, ctx)
 
     # Fetch constraints from any worker.
-    socket.send_json({"type": MessageType.QUERY_CONSTRAINTS})
-    resp = socket.recv_json()
-    if resp["type"] != MessageType.RESP_CONSTRAINTS:
-        raise MessageTypeError()
+    cc.request("", 0, cc.QUERY_CONSTRAINTS)
+    resp = cc.response_wait(0, cc.RESP_CONSTRAINTS)
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
+
+    print no_vars, my_min, my_max
+    sys.exit(0)
 
     # Prepare the GA engine.
     # Initialize genome with constraints.

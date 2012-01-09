@@ -1,4 +1,5 @@
 u"""Various utilities for PyHO."""
+import zmq
 import argparse
 import sys
 import time
@@ -15,6 +16,84 @@ class MessageType(object):
     SCORE = 11
 
     EXIT_SIGNAL = 99
+
+
+class ServerComm(MessageType):
+    handlers = {}
+
+    def __init__(self, listen_addr, context=None):
+        self.ctx = context or zmq.Context()
+        self.sock = self.ctx.socket(zmq.REP)
+        self.sock.bind("tcp://%s" % listen_addr)
+
+    def receive(self):
+        return self.sock.recv_json()
+
+    def send(self, msg, s_id, m_type):
+        self.sock.send_json({
+            "data": msg,
+            "id": s_id,
+            "type": m_type,
+        })
+
+    def all_handle(self):
+        resp = self.receive()
+        m_type = resp["type"]
+        if m_type in self.handlers:
+            handler = self.handlers[m_type]
+            return handler(resp["data"], resp["id"], self)
+        else:
+            raise MessageTypeError
+
+    def __setitem__(self, m_type, func):
+        self.handlers[m_type] = func
+
+
+class ClientComm(MessageType):
+    store = {}
+
+    def __init__(self, addresses, context=None):
+        self.ctx = context or zmq.Context()
+        self.sock = self.ctx.socket(zmq.REQ)
+        for addr in addresses:
+            print "Connecting to %s..." % addr
+            self.sock.connect("tcp://%s" % addr)
+
+    def request(self, msg, s_id, m_type=None):
+        can_send = bool(self.sock.getsockopt(zmq.EVENTS) & zmq.POLLOUT)
+        if can_send:
+            self.sock.send_json({
+                "data": msg,
+                "id": s_id,
+                "type": m_type,
+            })
+
+    def response(self, s_id, m_type=None):
+        if s_id in self.store:
+            resp = self.store.pop(s_id)
+            if resp["type"] != m_type:
+                raise MessageTypeError
+            return resp["data"]
+        else:
+            has_data = bool(self.sock.getsockopt(zmq.EVENTS) & zmq.POLLIN)
+            if has_data:
+                resp = self.sock.recv_json()
+                if resp["id"] == s_id:
+                    if resp["type"] != m_type:
+                        raise MessageTypeError
+                    return resp["data"]
+                else:
+                    self.store[resp["id"]] = resp
+                    return None
+            else:
+                return None
+
+    def response_wait(self, s_id, m_type=None, sleep=5 / 1000):
+        while True:
+            resp = self.response(s_id, m_type)
+            if resp is not None:
+                return resp
+            time.sleep(sleep)
 
 
 def optimizer_arguments():
