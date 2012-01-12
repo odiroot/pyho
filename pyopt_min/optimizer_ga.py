@@ -18,13 +18,15 @@ class MemoizedObjective(object):
     memo = {}
     received = {}
 
-    def __init__(self, socket=None):
-        self.socket = socket
+    def __init__(self, comm):
+        self.comm = comm
 
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
-        raw_data = chromosome.getInternalList()
-        raise NotImplementedError
+        raw = chromosome.getInternalList()
+        self.comm.request({"params": raw}, id(self), self.comm.DO_EVALUATION)
+        resp = self.comm.response_wait(id(self), self.comm.SCORE)
+        return resp["score"]
 
 
 def main():
@@ -47,9 +49,6 @@ def main():
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
 
-    print no_vars, my_min, my_max
-    sys.exit(0)
-
     # Prepare the GA engine.
     # Initialize genome with constraints.
     if args.allele:  # Built-in allele version.
@@ -57,7 +56,7 @@ def main():
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(MemoizedObjective(socket).objective)
+    genome.evaluator.set(MemoizedObjective(cc).objective)
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)

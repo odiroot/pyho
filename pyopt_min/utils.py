@@ -51,6 +51,7 @@ class ServerComm(MessageType):
 
 class ClientComm(MessageType):
     store = {}
+    POLL_INTERVAL = 1 / 1000
 
     def __init__(self, addresses, context=None):
         self.ctx = context or zmq.Context()
@@ -88,7 +89,7 @@ class ClientComm(MessageType):
             else:
                 return None
 
-    def response_wait(self, s_id, m_type=None, sleep=5 / 1000):
+    def response_wait(self, s_id, m_type=None, sleep=POLL_INTERVAL):
         while True:
             resp = self.response(s_id, m_type)
             if resp is not None:
