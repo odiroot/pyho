@@ -242,9 +242,20 @@ class CustomGPopulation(GPopulation):
         """
         # XXX: This ignores multiprocessing at all.
         to_check = self.internalPop[:]
+        comm = self.oneSelfGenome.getParam("comm")
+
         while to_check:
             pop = to_check[:]
             for ind in pop:
-                score = ind.evaluator[0](ind)
-                raise NotImplementedError
+                if hasattr(ind, "sent") and ind.sent == True:
+                    res = comm.response(id(ind), comm.SCORE)
+                    if res is not None:
+                        ind.score = res["score"]
+                        ind.sent = False
+                        to_check.remove(ind)
+                else:
+                    comm.request({"params": ind.getInternalList()},
+                        id(ind), comm.DO_EVALUATION)
+                    ind.sent = True
+
         self.clearFlags()

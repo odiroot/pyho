@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from datetime import datetime
+import time
 import os
 import sys
 import zmq
@@ -36,7 +37,7 @@ def main():
         comm.send(resp, s_id, comm.RESP_CONSTRAINTS)
 
     def handle_evaluation(data, s_id, comm):
-        print "%s: Doing an evaluation" % datetime.now()
+        print s_id
         params = data["params"]
         score = bridge.bfun(params)
         resp = {"score": score}

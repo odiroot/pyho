@@ -23,14 +23,17 @@ class ServerComm(MessageType):
 
     def __init__(self, listen_addr, context=None):
         self.ctx = context or zmq.Context()
-        self.sock = self.ctx.socket(zmq.REP)
-        self.sock.bind("tcp://%s" % listen_addr)
+        self.listener = self.ctx.socket(zmq.PULL)
+        self.listener.connect("tcp://localhost:5555")
+
+        self.publisher = self.ctx.socket(zmq.PUB)
+        self.publisher.connect("tcp://localhost:5556")
 
     def receive(self):
-        return self.sock.recv_json()
+        return self.listener.recv_json()
 
     def send(self, msg, s_id, m_type):
-        self.sock.send_json({
+        self.publisher.send_json({
             "data": msg,
             "id": s_id,
             "type": m_type,
@@ -55,19 +58,20 @@ class ClientComm(MessageType):
 
     def __init__(self, addresses, context=None):
         self.ctx = context or zmq.Context()
-        self.sock = self.ctx.socket(zmq.REQ)
-        for addr in addresses:
-            print "Connecting to %s..." % addr
-            self.sock.connect("tcp://%s" % addr)
+        self.sender = self.ctx.socket(zmq.PUSH)
+        self.sender.bind("tcp://*:5555")
+        time.sleep(0.5)  # Wait for socket synchronization.
+
+        self.receiver = self.ctx.socket(zmq.SUB)
+        self.receiver.setsockopt(zmq.SUBSCRIBE, '')
+        self.receiver.bind("tcp://*:5556")
 
     def request(self, msg, s_id, m_type=None):
-        can_send = bool(self.sock.getsockopt(zmq.EVENTS) & zmq.POLLOUT)
-        if can_send:
-            self.sock.send_json({
-                "data": msg,
-                "id": s_id,
-                "type": m_type,
-            })
+        self.sender.send_json({
+            "data": msg,
+            "id": s_id,
+            "type": m_type,
+        })
 
     def response(self, s_id, m_type=None):
         if s_id in self.store:
@@ -76,9 +80,9 @@ class ClientComm(MessageType):
                 raise MessageTypeError
             return resp["data"]
         else:
-            has_data = bool(self.sock.getsockopt(zmq.EVENTS) & zmq.POLLIN)
+            has_data = bool(self.receiver.getsockopt(zmq.EVENTS) & zmq.POLLIN)
             if has_data:
-                resp = self.sock.recv_json()
+                resp = self.receiver.recv_json()
                 if resp["id"] == s_id:
                     if resp["type"] != m_type:
                         raise MessageTypeError

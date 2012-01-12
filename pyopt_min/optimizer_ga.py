@@ -58,7 +58,8 @@ def main():
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(MemoizedObjective(cc).objective)
+    # genome.evaluator.set(MemoizedObjective(cc).objective)
+    genome.setParams(comm=cc)
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)
