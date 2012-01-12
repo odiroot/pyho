@@ -240,22 +240,24 @@ class CustomGPopulation(GPopulation):
         :param args: this params are passed to the evaluation function
 
         """
-        # XXX: This ignores multiprocessing at all.
-        to_check = self.internalPop[:]
+        # NOTE: This ignores multiprocessing at all.
+        pop = self.internalPop[:]
+        # First dispatch all evaluation tasks.
+        for ind in pop:
+            ind.poll = ind.evaluator[0](ind)
 
-        for ind in to_check:
-            ind.gen = ind.evaluator[0](ind)
-
+        # Try to retrieve evaluation results for all individuals.
         clean = False
         while not clean:
             clean = True
-            for ind in to_check:
-                if ind.gen:
-                    res = ind.gen.next()
-                    if res is None:
+            for ind in pop:
+                # Check whether we have unfinished request for this individual.
+                if ind.poll:
+                    res = ind.poll.next()  # Try to fetch result.
+                    if res is None:  # Result not ready.
                         clean = False
-                    else:
+                    else:  # We finally got an evaluation.
                         ind.score = res
-                        ind.gen = None
+                        ind.poll = None
 
         self.clearFlags()
