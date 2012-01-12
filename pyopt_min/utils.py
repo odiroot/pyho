@@ -60,11 +60,11 @@ class ClientComm(MessageType):
         self.ctx = context or zmq.Context()
         self.sender = self.ctx.socket(zmq.PUSH)
         self.sender.bind("tcp://*:5555")
-        time.sleep(0.5)  # Wait for socket synchronization.
 
         self.receiver = self.ctx.socket(zmq.SUB)
         self.receiver.setsockopt(zmq.SUBSCRIBE, '')
         self.receiver.bind("tcp://*:5556")
+        time.sleep(0.5)  # Wait for socket synchronization.
 
     def request(self, msg, s_id, m_type=None):
         self.sender.send_json({

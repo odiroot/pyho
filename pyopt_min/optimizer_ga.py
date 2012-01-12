@@ -2,7 +2,6 @@
 import os
 import sys
 import zmq
-import time
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
@@ -16,25 +15,31 @@ from ga_common import AlleleG1DList
 class MemoizedObjective(object):
     u"Memoized objective helper with generator result."
     memo = {}
-    received = {}
 
     def __init__(self, comm):
         self.comm = comm
 
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
-        raw = chromosome.getInternalList()
-        raise NotImplementedError
-        self.comm.request({"params": raw}, id(self), self.comm.DO_EVALUATION)
+        p = chromosome.getInternalList()
+        uid = id(chromosome)  # Unique id for messaging.
+
+        sent = False  # Whether evaluation request is sent.
+        # We work in a generator to hold some state.
         while True:
-            res = self.comm.response(id(self), self.comm.SCORE)
-            yield res["score"] if res else None
+            if not sent:
+                # Send asynchronous request for evaluation.
+                self.comm.request({"params": p}, uid, self.comm.DO_EVALUATION)
+                sent = True
+            if sent:
+                # Try to retrieve evaluation score from the transport.
+                res = self.comm.response(uid, self.comm.SCORE)
+                yield res["score"] if res else None
+            yield None
 
 
 def main():
     # TODO:
-    # 1. Fetch constraints (no_vars, maxes, mins)
-    # 2. Connect objective via ZeroMQ
     # 3. After evolution print gest best info.
     # 4. Saving output files.
     # 5. Output messages transport via PUB/SUB.
@@ -58,8 +63,7 @@ def main():
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    # genome.evaluator.set(MemoizedObjective(cc).objective)
-    genome.setParams(comm=cc)
+    genome.evaluator.set(MemoizedObjective(cc).objective)
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)
@@ -90,6 +94,7 @@ def main():
     #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList())
 
     # TODO: Bfile.
+    print cc.store
 
 if __name__ == '__main__':
     main()
