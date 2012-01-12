@@ -259,5 +259,6 @@ class CustomGPopulation(GPopulation):
                     else:  # We finally got an evaluation.
                         ind.score = res
                         ind.poll = None
+            time.sleep(0.007)  # Don't hammer sockets with the loop.
 
         self.clearFlags()

@@ -22,20 +22,25 @@ class MemoizedObjective(object):
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
         p = chromosome.getInternalList()
-        uid = id(chromosome)  # Unique id for messaging.
+        key = tuple(p)
 
-        sent = False  # Whether evaluation request is sent.
-        # We work in a generator to hold some state.
-        while True:
-            if not sent:
-                # Send asynchronous request for evaluation.
-                self.comm.request({"params": p}, uid, self.comm.DO_EVALUATION)
-                sent = True
-            if sent:
-                # Try to retrieve evaluation score from the transport.
-                res = self.comm.response(uid, self.comm.SCORE)
-                yield res["score"] if res else None
-            yield None
+        if key in self.memo:  # We already had this task.
+            yield self.memo[key]
+        else:  # We have to compute a score.
+            uid = id(chromosome)  # Unique id for messaging.
+            sent = False  # Whether evaluation request is sent.
+            while True:
+                if not sent:
+                    # Send asynchronous request for evaluation.
+                    self.comm.request({"params": p}, uid, self.comm.DO_EVALUATION)
+                    sent = True
+                if sent:
+                    # Try to retrieve evaluation score from the transport.
+                    res = self.comm.response(uid, self.comm.SCORE)
+                    if res is not None:
+                        self.memo[key] = res["score"]
+                        yield res["score"]
+                yield None
 
 
 def main():
@@ -94,7 +99,8 @@ def main():
     #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList())
 
     # TODO: Bfile.
-    print cc.store
+    if cc.store:
+        print "Warning: client communicator store not empty."
 
 if __name__ == '__main__':
     main()
