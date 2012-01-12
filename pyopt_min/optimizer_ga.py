@@ -24,9 +24,11 @@ class MemoizedObjective(object):
     def objective(self, chromosome):
         u"The Genetic Algorithm evaluation function"
         raw = chromosome.getInternalList()
+        raise NotImplementedError
         self.comm.request({"params": raw}, id(self), self.comm.DO_EVALUATION)
-        resp = self.comm.response_wait(id(self), self.comm.SCORE)
-        return resp["score"]
+        while True:
+            res = self.comm.response(id(self), self.comm.SCORE)
+            yield res["score"] if res else None
 
 
 def main():

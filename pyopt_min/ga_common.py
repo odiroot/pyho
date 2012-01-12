@@ -241,8 +241,10 @@ class CustomGPopulation(GPopulation):
 
         """
         # XXX: This ignores multiprocessing at all.
-
         to_check = self.internalPop[:]
-        for ind in to_check:
-            ind.score = ind.evaluator[0](ind)
+        while to_check:
+            pop = to_check[:]
+            for ind in pop:
+                score = ind.evaluator[0](ind)
+                raise NotImplementedError
         self.clearFlags()
