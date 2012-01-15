@@ -86,8 +86,9 @@ def main():
     # Evolution is stoped.
     run_time = timer.stop()
     print "GA finished in %g s." % run_time
-    # bridge.print_best(ga.bestIndividual().getInternalList())
 
+    ## TODO: End of evaluation output and files. ##
+    # bridge.coil_to_print(ga.bestIndividual().getInternalList())
     # # CBlock output.
     # if args.outcb:
     #     bridge.save_cblock(args.outcb)

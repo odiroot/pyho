@@ -29,6 +29,19 @@ double wantedNorm;
 int nx, ny, nz;
 
 
+BlockCoil basic_eval(real t[], float& stddev, float& result, Pt_real& bmean) {
+    BlockCoil bc = paramCoil.shape(t, noDesignVars);
+
+    stddev = evalCoilStdDev(bc, *grid, bmean);
+    if(nCntrComps == 0) {
+        result = stddev;
+    } else {
+        result = evalCoilGlobalUniv(bc, *grid, nCntrComps, cntrComps,
+            Bwanted, bmean);
+    }
+    return bc;
+}
+
 int get_coil(const char* coil_path, int& nsect, int& nvars) {
     ifstream cstream(coil_path);
     cstream >> paramCoil;
@@ -156,19 +169,6 @@ real* get_my_min() {
 
 real* get_my_max() {
     return myMax;
-}
-
-BlockCoil basic_eval(real t[], float& stddev, float& result, Pt_real& bmean) {
-    BlockCoil bc = paramCoil.shape(t, noDesignVars);
-
-    stddev = evalCoilStdDev(bc, *grid, bmean);
-    if(nCntrComps == 0) {
-        result = stddev;
-    } else {
-        result = evalCoilGlobalUniv(bc, *grid, nCntrComps, cntrComps,
-            Bwanted, bmean);
-    }
-    return bc;
 }
 
 float bFun(real t[]) {
