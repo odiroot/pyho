@@ -20,7 +20,7 @@ def main():
 
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
-    sc = ServerComm("*:%d" % args.port, ctx)
+    sc = ServerComm(args.manager, args.subscriber, ctx)
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)

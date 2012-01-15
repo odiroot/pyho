@@ -21,13 +21,14 @@ class MessageType(object):
 class ServerComm(MessageType):
     handlers = {}
 
-    def __init__(self, listen_addr, context=None):
+    def __init__(self, pull_addr, pub_addr, context=None):
         self.ctx = context or zmq.Context()
+
         self.listener = self.ctx.socket(zmq.PULL)
-        self.listener.connect("tcp://localhost:5555")
+        self.listener.connect("tcp://%s" % pull_addr)
 
         self.publisher = self.ctx.socket(zmq.PUB)
-        self.publisher.connect("tcp://localhost:5556")
+        self.publisher.connect("tcp://%s" % pub_addr)
 
     def receive(self):
         return self.listener.recv_json()
@@ -56,14 +57,15 @@ class ClientComm(MessageType):
     store = {}
     POLL_INTERVAL = 1 / 1000
 
-    def __init__(self, addresses, context=None):
+    def __init__(self, push_port, sub_port, context=None):
         self.ctx = context or zmq.Context()
+
         self.sender = self.ctx.socket(zmq.PUSH)
-        self.sender.bind("tcp://*:5555")
+        self.sender.bind("tcp://*:%d" % push_port)
 
         self.receiver = self.ctx.socket(zmq.SUB)
         self.receiver.setsockopt(zmq.SUBSCRIBE, '')
-        self.receiver.bind("tcp://*:5556")
+        self.receiver.bind("tcp://*:%d" % sub_port)
         time.sleep(0.5)  # Wait for socket synchronization.
 
     def request(self, msg, s_id, m_type=None):
@@ -111,9 +113,11 @@ def optimizer_arguments():
         type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
         type=str, help=u"path to the stop-signalling file")
-    parser.add_argument("-workers", metavar="<address>", dest="workers",
-        type=str, nargs="*", default=["localhost:5555"],
-        help=u"Message transport listen addresses of the workers")
+    parser.add_argument("-sender-port", metavar="<port>", dest="sender",
+        type=int, default=5555, help=u"Evaluation task manager listen port")
+    parser.add_argument("-receiver-port", metavar="<port>", dest="receiver",
+        type=int, default=5556, help=u"Task result gatherer listen port")
+
     # Genetic Algorithm parameters.
     parser.add_argument("-seed", metavar="<value>", dest="seed",
         type=int, help=u"start the evolution with a specified random seed")
@@ -137,8 +141,13 @@ def evaluator_arguments():
     # Run settings
     parser.add_argument("-log", metavar="<logfile>", dest="logfile",
         type=str, help=u"log file path")
-    parser.add_argument("-port", metavar="<number>", dest="port",
-        type=int, help=u"Message transport listen port", default=5555)
+    parser.add_argument("-manager-addres", metavar="<address>", dest="manager",
+        type=str, default="localhost:5555",
+        help=u"Listening address of task manager")
+    parser.add_argument("-publish-address", metavar="<address>",
+        dest="subscriber", type=str, default="localhost:5556",
+        help=u"Task result publishing address")
+
     # Input files.
     parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
         required=True, type=str, help=u"model coil definition")

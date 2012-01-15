@@ -52,7 +52,7 @@ def main():
 
     # Prepare the ZeroMQ communication layer.
     ctx = zmq.Context()
-    cc = ClientComm(args.workers, ctx)
+    cc = ClientComm(args.sender, args.receiver, ctx)
 
     # Fetch constraints from any worker.
     cc.request("", 0, cc.QUERY_CONSTRAINTS)
