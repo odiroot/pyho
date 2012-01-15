@@ -4,9 +4,8 @@
 #define optimizer_wrapper_h
 extern "C" {
 
-void c_print(const char* text);
 void redirect_log(const char* path);
-void get_coil(const char* coil_path);
+void get_coil(const char* coil_path, int& nsect, int& nvars);
 void prepare_constraints();
 void get_grid(const char* grid_path);
 void cost_function(float Bx, float By, float Bz, int flag);

@@ -6,9 +6,8 @@ cdef extern from *:
     ctypedef float real
 
 cdef extern from "optimizer_wrapper.h":
-    void c_print(char* text)
     void redirect_log(char* path)
-    void get_coil(char* coil_path)
+    void get_coil(char* coil_path, int& nsect, int& nvars)
     void prepare_constraints()
     void get_grid(char* grid_path)
     void cost_function(float Bx, float By, float Bz, int flag)
@@ -34,21 +33,21 @@ cdef extern from "stdlib.h":
     void* realloc(void* ptr, size_t size)
 
 
-def cprint(object string):
-    string = unicode(string)
-    c_print(string)
-
-
 def prepare(object args):
     # Initialize log file.
     if args.logfile:
         redirect_log(args.logfile)
 
-    cprint("PyHO :: Started the GA coil optimizer (Bridge) "
-        "at: %s\n" % time.asctime())
+    print "PyHO :: Started the block coil optimizer evaluation module",
+    print "at: %s\n" % time.asctime()
+
     # Prepare param coil.
-    get_coil(args.coil)
+    cdef int nsect, nvars
+    get_coil(args.coil, nsect, nvars)
+    print "Read parametric description of the coil.",
+    print "%d sections => %d design variables" % (nsect, nvars)
     prepare_constraints()
+
     # Get grid.
     get_grid(args.grid)
     # Cost function.
@@ -82,7 +81,7 @@ cdef real* list_to_real(object genome):
     for i in range(size):
         t[i] = genome[i]
     return t
-    
+
 
 def bfun(object genome):
     cdef real* t = list_to_real(genome)
@@ -93,7 +92,7 @@ def bfun(object genome):
 def print_best(object genome):
     cdef real* t = list_to_real(genome)
     print_best_coil(t)
-    cprint("PyHO :: coil design finished at: %s\n" % time.asctime())    
+    print "PyHO :: coil design finished at: %s\n" % time.asctime()
     free(t)
 
 def save_cblock(object path):

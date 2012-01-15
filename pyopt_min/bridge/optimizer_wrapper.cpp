@@ -11,10 +11,6 @@
 #include "opt_utils.h"
 using namespace std;
 
-void c_print(const char* text) {
-    cout << text << endl;
-}
-
 /** WRAPPING OPTIMIZER **/
 // General purpose variables
 ofstream logFile;
@@ -44,7 +40,7 @@ void redirect_log(const char* path) {
     new redirecter(logFile, cout);
 }
 
-void get_coil(const char* coil_path) {
+void get_coil(const char* coil_path, int& nsect, int& nvars) {
     ifstream cstream(coil_path);
     cstream >> paramCoil;
     cstream.close();
@@ -60,13 +56,11 @@ void get_coil(const char* coil_path) {
         if(max > min) {
             noDesignVars++;
         }
-        c_print("Read parametric description of the coil.");
-        cout << paramCoil.getNoSect() << " sections => ";
-        cout << noDesignVars << " design variables" << endl;
-
+        nsect = paramCoil.getNoSect();
+        nvars = noDesignVars;
     } else {
-        c_print("ERROR: Can't find parametric description of the coil.");
-        c_print("Exiting abnormally\n");
+        cout << "ERROR: Can't find parametric description of the coil.";
+        cout << "Exiting abnormally\n";
         exit(1);
     }
 }
@@ -100,8 +94,8 @@ void get_grid(const char* grid_path) {
     cout << " BB=(" << llc << ")-(" << urc << ")" << endl;
 
     if(grid->size() <= 0) {
-        c_print("ERROR: Can't find grid.");
-        c_print("Exiting abnormally\n");
+        cout << "ERROR: Can't find grid.";
+        cout << "Exiting abnormally\n";
         exit(1);
     }
 }
@@ -148,7 +142,7 @@ void prepare_reference_value() {
     cout << " stdDev=" << stdDev << ", err= " << bestRslt << endl;
 
     if(nCntrComps == 0) {
-        c_print("Trying to obtain possibly uniform field fit to mean value.");
+        cout << "Trying to obtain possibly uniform field fit to mean value.";
     } else {
         cout << "Trying to obtain uniform B=[ ";
         for(int j = 1; j < 4; j++) {
@@ -192,11 +186,11 @@ float bFun(real t[]) {
         obj = evalCoilGlobalUniv(bc, *grid, nCntrComps, cntrComps, Bwanted, Bmean);
         obj /= wantedNorm;
     }
-    
+
     return obj;
 }
 
-void print_best_coil(real t[]) {   
+void print_best_coil(real t[]) {
     bestC = paramCoil.shape(t, noDesignVars);
     stdDev = evalCoilStdDev(bestC, *grid, Bmean);
     if(nCntrComps == 0) {
@@ -206,7 +200,7 @@ void print_best_coil(real t[]) {
         bestRslt = evalCoilGlobalUniv(bestC, *grid, nCntrComps, cntrComps,
             Bwanted, tmpB);
     }
-    
+
     cout << "Optimized coil: B_mean= (" << Bmean;
     cout << "), stdDev= " << stdDev;
     cout << ", err= " << bestRslt << endl;
