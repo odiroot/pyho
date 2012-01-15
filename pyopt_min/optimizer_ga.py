@@ -91,12 +91,10 @@ def main():
     # # CBlock output.
     # if args.outcb:
     #     bridge.save_cblock(args.outcb)
-    # # Rebuild grid with new density if fine is specified.
-    # if args.density:
-    #     bridge.rebuild(args.density)
     # # XML output.
     # if args.outxml:
-    #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList())
+    #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList(),
+    #         args.density)
 
     # TODO: Bfile.
     if cc.store:

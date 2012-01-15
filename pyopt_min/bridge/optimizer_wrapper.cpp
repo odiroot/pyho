@@ -9,11 +9,11 @@
 #include "redirecter.h"
 #include "mathconst.h"
 #include "opt_utils.h"
+
+
 using namespace std;
 
-/** WRAPPING OPTIMIZER **/
-// General purpose variables
-ofstream logFile;
+
 // Coil parameters
 static real* myMin = 0;
 static real* myMax = 0;
@@ -26,21 +26,10 @@ int nCntrComps;
 int cntrComps[3];
 Pt_real Bwanted;
 double wantedNorm;
-
-BlockCoil bestC;
 int nx, ny, nz;
-real bestRslt;
-Pt_real Bmean;
-real stdDev;
 
 
-void redirect_log(const char* path) {
-    logFile.open(path);
-    //redirecter* redir =
-    new redirecter(logFile, cout);
-}
-
-void get_coil(const char* coil_path, int& nsect, int& nvars) {
+int get_coil(const char* coil_path, int& nsect, int& nvars) {
     ifstream cstream(coil_path);
     cstream >> paramCoil;
     cstream.close();
@@ -58,10 +47,9 @@ void get_coil(const char* coil_path, int& nsect, int& nvars) {
         }
         nsect = paramCoil.getNoSect();
         nvars = noDesignVars;
+        return 0;
     } else {
-        cout << "ERROR: Can't find parametric description of the coil.";
-        cout << "Exiting abnormally\n";
-        exit(1);
+        return -1;
     }
 }
 
@@ -81,7 +69,7 @@ void prepare_constraints() {
     }
 }
 
-void get_grid(const char* grid_path) {
+int get_grid(const char* grid_path, int& npoints) {
     Pt_real llc, urc;
     nx = 0, ny = 0, nz = 0;
     ifstream cstream(grid_path);
@@ -90,13 +78,13 @@ void get_grid(const char* grid_path) {
     cstream.close();
 
     grid = new LatticeGrid(llc, urc, nx, ny, nz);
-    cout << "Grid: " << nx*ny*nz << " points in";
-    cout << " BB=(" << llc << ")-(" << urc << ")" << endl;
-
+    npoints = nx * ny * nz;
+    // TODO
+    // cout << " BB=(" << llc << ")-(" << urc << ")" << endl;
     if(grid->size() <= 0) {
-        cout << "ERROR: Can't find grid.";
-        cout << "Exiting abnormally\n";
-        exit(1);
+        return -1;
+    } else {
+        return 0;
     }
 }
 
@@ -121,44 +109,40 @@ void cost_function(float Bx, float By, float Bz, int flag) {
     wantedNorm = sqrt(wantedNorm);
 }
 
-void prepare_reference_value() {
-    bestC = paramCoil.shape(0, noDesignVars);
+void prepare_reference_value(float& stddev, float& err) {
+    Pt_real bmean;
     midP = paramCoil.midPt();
 
-    stdDev = evalCoilStdDev(bestC, *grid, Bmean);
+    basic_eval(0, stddev, err, bmean);
+    // TODO:
+    //cout << "Reference coil: B_mean=(" << bmean << "),";
+
     if(nCntrComps == 0) {
-        bestRslt = stdDev;
+        // TODO:
+        // cout << "Trying to obtain possibly uniform field fit to mean value.";
     } else {
-        bestRslt = evalCoilGlobalUniv(bestC, *grid, nCntrComps,
-            cntrComps, Bwanted, Bmean);
         for(int j = 0; j < nCntrComps; j++) {
             int cc = cntrComps[j];
-            if(Bmean(cc)*Bwanted(cc) < 0) {
+            if(bmean(cc)*Bwanted(cc) < 0) {
                 Bwanted(cc) = -Bwanted(cc);
             }
         }
-    }
-    cout << "Reference coil: B_mean=(" << Bmean << "),";
-    cout << " stdDev=" << stdDev << ", err= " << bestRslt << endl;
-
-    if(nCntrComps == 0) {
-        cout << "Trying to obtain possibly uniform field fit to mean value.";
-    } else {
-        cout << "Trying to obtain uniform B=[ ";
-        for(int j = 1; j < 4; j++) {
-            int k;
-            for(k = 0; k < nCntrComps; k++) {
-                if(cntrComps[k] == j) {
-                    break;
-                }
-            }
-            if(k == nCntrComps) {
-                cout << "* ";
-            } else {
-                cout << Bwanted(cntrComps[k]) << " ";
-            }
-        }
-        cout << "]" << endl;
+        // TODO:
+        // cout << "Trying to obtain uniform B=[ ";
+        // for(int j = 1; j < 4; j++) {
+        //     int k;
+        //     for(k = 0; k < nCntrComps; k++) {
+        //         if(cntrComps[k] == j) {
+        //             break;
+        //         }
+        //     }
+        //     if(k == nCntrComps) {
+        //         cout << "* ";
+        //     } else {
+        //         cout << Bwanted(cntrComps[k]) << " ";
+        //     }
+        // }
+        // cout << "]" << endl;
     }
 }
 
@@ -174,41 +158,48 @@ real* get_my_max() {
     return myMax;
 }
 
-float bFun(real t[]) {
+BlockCoil basic_eval(real t[], float& stddev, float& result, Pt_real& bmean) {
     BlockCoil bc = paramCoil.shape(t, noDesignVars);
 
-    float obj;
+    stddev = evalCoilStdDev(bc, *grid, bmean);
+    if(nCntrComps == 0) {
+        result = stddev;
+    } else {
+        result = evalCoilGlobalUniv(bc, *grid, nCntrComps, cntrComps,
+            Bwanted, bmean);
+    }
+    return bc;
+}
+
+float bFun(real t[]) {
+    float stddev, result, obj;
+    Pt_real bmean;
+
+    basic_eval(t, stddev, result, bmean);
 
     if(nCntrComps == 0) {
-        real std = evalCoilStdDev(bc, *grid, Bmean);
-        obj = std / Bmean.norm();
+        obj = stddev / bmean.norm();
     } else {
-        obj = evalCoilGlobalUniv(bc, *grid, nCntrComps, cntrComps, Bwanted, Bmean);
-        obj /= wantedNorm;
+        obj = result / wantedNorm;
     }
-
     return obj;
 }
 
-void print_best_coil(real t[]) {
-    bestC = paramCoil.shape(t, noDesignVars);
-    stdDev = evalCoilStdDev(bestC, *grid, Bmean);
-    if(nCntrComps == 0) {
-        bestRslt = stdDev;
-    } else {
-        Pt_real tmpB;
-        bestRslt = evalCoilGlobalUniv(bestC, *grid, nCntrComps, cntrComps,
-            Bwanted, tmpB);
-    }
+void print_coil(real t[]) {
+    float stddev, result;
+    Pt_real bmean;
 
-    cout << "Optimized coil: B_mean= (" << Bmean;
-    cout << "), stdDev= " << stdDev;
-    cout << ", err= " << bestRslt << endl;
+    basic_eval(t, stddev, result, bmean);
+    // TODO: Transfer to Cython
+    cout << "Optimized coil: B_mean= (" << bmean;
+    cout << "), std. dev.= " << stddev;
+    cout << ", err= " << result << endl;
 }
 
-void output_cblock(const char* path) {
+void output_cblock(const char* path, real t[]) {
+    BlockCoil tmp = paramCoil.shape(t, noDesignVars);
     ofstream cblockOut(path);
-    cblockOut << bestC << endl;
+    cblockOut << tmp << endl;
     cblockOut.close();
 }
 
@@ -217,6 +208,12 @@ void rebuild_grid(int fine) {
 }
 
 void output_xml(char* path, real t[]) {
+    BlockCoil tmp;
+    float stddev, result;
+    Pt_real bmean;
+
+    tmp = basic_eval(t, stddev, result, bmean);
+
     writeXML(path, noDesignVars, t, nCntrComps, cntrComps, Bwanted,
-        grid, nx, ny, nz, paramCoil, bestC, bestRslt, Bmean, stdDev);
+        grid, nx, ny, nz, paramCoil, tmp, result, bmean, stddev);
 }
