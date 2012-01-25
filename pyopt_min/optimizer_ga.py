@@ -54,6 +54,13 @@ def main():
     args, unknown = optimizer_arguments().parse_known_args()
 
     if args.workers:  # Local mode.
+        # Check sanity.
+        if ("-coil" not in unknown or "-grid" not in unknown
+            or "-fine" not in unknown):
+            print "\nYou probably missed some important arguments."
+            print "Evaluation process(es) is unlikely to start."
+            print "Check for -coil, -grid, -fine arguments.\n"
+
         # Generate temporary paths to avoid collisions.
         fn, push_ipc = tempfile.mkstemp("pyho_push")
         os.close(fn)
@@ -73,7 +80,7 @@ def main():
             # TODO: Changing evaluator path.
             command = ["./evaluator_block.py"] + evaluator_args
             p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdin=subprocess.PIPE)
             workers.append(p)
 
         # Kill children workers at exit.
