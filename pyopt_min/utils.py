@@ -14,10 +14,13 @@ def optimizer_arguments():
         type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
         type=str, help=u"path to the stop-signalling file")
-    parser.add_argument("-sender-port", metavar="<port>", dest="sender",
+    parser.add_argument("-push-address", metavar="<port>", dest="push",
         type=int, default=5555, help=u"Evaluation task manager listen port")
-    parser.add_argument("-receiver-port", metavar="<port>", dest="receiver",
+    parser.add_argument("-subscribe-address", metavar="<port>", dest="subscribe",
         type=int, default=5556, help=u"Task result gatherer listen port")
+    parser.add_argument("-local-workers", metavar="<number>", dest="workers",
+        type=int, default=None, help=u"Activates local computation mode"
+        " with a specified number of workers. Uses IPC communication.")
 
     # Genetic Algorithm parameters.
     parser.add_argument("-seed", metavar="<value>", dest="seed",
@@ -42,12 +45,15 @@ def evaluator_arguments():
     # Run settings
     parser.add_argument("-log", metavar="<logfile>", dest="logfile",
         type=str, help=u"log file path")
-    parser.add_argument("-manager-address", metavar="<address>", dest="manager",
+    parser.add_argument("-pull-address", metavar="<address>", dest="pull",
         type=str, default="localhost:5555",
         help=u"Listening address of task manager")
     parser.add_argument("-publish-address", metavar="<address>",
-        dest="subscriber", type=str, default="localhost:5556",
+        dest="publish", type=str, default="localhost:5556",
         help=u"Task result publishing address")
+    parser.add_argument("-local", action="store_true", default=False,
+        help=u"Work as a local worker communicating through IPC."
+        " Should be launched automatically by the optimizer process.")
 
     # Input files.
     parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",

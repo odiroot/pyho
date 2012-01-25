@@ -2,6 +2,7 @@
 import os
 import sys
 import zmq
+import tempfile
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
@@ -49,11 +50,30 @@ def main():
     # 3. After evolution print gest best info.
     # 4. Saving output files.
     # 5. Output messages transport via PUB/SUB.
-    args = optimizer_arguments().parse_args()
+    args, unknown = optimizer_arguments().parse_known_args()
+
+    if args.workers:  # Local mode.
+        # Generate temporary paths to avoid collisions.
+        fn, push_ipc = tempfile.mkstemp("pyho_push")
+        os.close(fn)
+        fn, sub_ipc = tempfile.mkstemp("pyho_sub")
+        os.close(fn)
+
+        push_addr = "ipc://%s" % push_ipc
+        sub_addr = "ipc://%s" % sub_ipc
+
+        evaluator_args = ' '.join(unknown) + " -local"
+        evaluator_args += " -pull-address %s" % push_ipc
+        evaluator_args += " -publish-address %s" % sub_ipc
+        print evaluator_args
+        # TODO: Start workers
+
+    else:  # Network mode.
+        push_addr = "tcp://*:%d" % args.push
+        sub_addr = "tcp://*:%d" % args.subscribe
 
     # Prepare the ZeroMQ communication layer.
-    ctx = zmq.Context()
-    cc = ClientComm(args.sender, args.receiver, ctx)
+    cc = ClientComm(push_addr=push_addr, sub_addr=sub_addr)
 
     # Fetch constraints from any worker.
     cc.request("", 0, cc.QUERY_CONSTRAINTS)

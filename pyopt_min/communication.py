@@ -22,10 +22,10 @@ class ServerComm(MessageType):
         self.ctx = context or zmq.Context()
 
         self.listener = self.ctx.socket(zmq.PULL)
-        self.listener.connect("tcp://%s" % pull_addr)
+        self.listener.connect(pull_addr)
 
         self.publisher = self.ctx.socket(zmq.PUB)
-        self.publisher.connect("tcp://%s" % pub_addr)
+        self.publisher.connect(pub_addr)
 
     def receive(self):
         return self.listener.recv_json()
@@ -54,15 +54,15 @@ class ClientComm(MessageType):
     store = {}
     POLL_INTERVAL = 1 / 1000
 
-    def __init__(self, push_port, sub_port, context=None):
+    def __init__(self, push_addr, sub_addr, context=None):
         self.ctx = context or zmq.Context()
 
         self.sender = self.ctx.socket(zmq.PUSH)
-        self.sender.bind("tcp://*:%d" % push_port)
+        self.sender.bind(push_addr)
 
         self.receiver = self.ctx.socket(zmq.SUB)
         self.receiver.setsockopt(zmq.SUBSCRIBE, '')
-        self.receiver.bind("tcp://*:%d" % sub_port)
+        self.receiver.bind(sub_addr)
         time.sleep(0.5)  # Wait for socket synchronization.
 
     def request(self, msg, s_id, m_type=None):

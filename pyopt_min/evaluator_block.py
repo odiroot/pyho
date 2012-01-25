@@ -17,9 +17,15 @@ from communication import ServerComm
 def main():
     args = evaluator_arguments().parse_args()
 
+    if args.local:
+        pull_addr = "ipc://%s" % args.pull
+        pub_addr = "ipc://%s" % args.publish
+    else:
+        pull_addr = "tcp://%s" % args.pull
+        pub_addr = "tcp://%s" % args.publish
+
     # Prepare the ZeroMQ communication layer.
-    ctx = zmq.Context()
-    sc = ServerComm(args.manager, args.subscriber, ctx)
+    sc = ServerComm(pull_addr=pull_addr, pub_addr=pub_addr)
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)
