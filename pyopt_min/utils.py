@@ -19,7 +19,7 @@ def optimizer_arguments():
     parser.add_argument("-subscribe-address", metavar="<port>", dest="subscribe",
         type=int, default=5556, help=u"Task result gatherer listen port")
     parser.add_argument("-local-workers", metavar="<number>", dest="workers",
-        type=int, default=None, help=u"Activates local computation mode"
+        type=int, default=1, help=u"Activates local computation mode"
         " with a specified number of workers. Uses IPC communication.")
     parser.add_argument("-send-exit", action="store_true", default=False,
         help=u"Whether to kill remote workers on optimizer exit")

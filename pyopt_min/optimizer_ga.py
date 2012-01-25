@@ -60,6 +60,7 @@ def main():
             print "\nYou probably missed some important arguments."
             print "Evaluation process(es) is unlikely to start."
             print "Check for -coil, -grid, -fine arguments.\n"
+        print "Starting optimization with local workers (%d)" % args.workers or 1
 
         # Generate temporary paths to avoid collisions.
         fn, push_ipc = tempfile.mkstemp("pyho_push")
@@ -78,9 +79,10 @@ def main():
         # Launch desired number of worker processes.
         for i in range(args.workers or 1):
             # TODO: Changing evaluator path.
-            command = ["./evaluator_block.py"] + evaluator_args
-            p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                stdin=subprocess.PIPE)
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            command = os.path.join(this_dir, "evaluator_block.py")
+            p = subprocess.Popen([command] + evaluator_args,
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             workers.append(p)
 
         # Kill children workers at exit.
@@ -92,9 +94,11 @@ def main():
     else:  # Network mode.
         push_addr = "tcp://*:%d" % args.push
         sub_addr = "tcp://*:%d" % args.subscribe
+        print "Starting optimization with network workers"
 
     # Prepare the ZeroMQ communication layer.
     cc = ClientComm(push_addr=push_addr, sub_addr=sub_addr)
+    print "Waiting for initial connection"
 
     # Fetch constraints from any worker.
     cc.request("", 0, cc.QUERY_CONSTRAINTS)
@@ -102,6 +106,7 @@ def main():
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
+    print "Received initial data from workers"
 
     # Prepare the GA engine.
     # Initialize genome with constraints.
