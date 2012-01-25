@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import time
 from itertools import izip
 from random import randint, uniform, random
@@ -35,6 +36,7 @@ def stats_step_callback(ga):
         mean_time = timer.time_so_far / ga.currentGeneration
         pstr += "\t(est. time to end=%d s.)" % (gens_left * mean_time)
     print pstr
+    sys.stdout.flush()
 
 
 ## Custom Genetic operators (and other classes). ##
