@@ -10,7 +10,8 @@ import pyximport
 pyximport.install()
 from bridge import bridge
 
-from utils import evaluator_arguments, ServerComm
+from utils import evaluator_arguments
+from communication import ServerComm
 
 
 def main():

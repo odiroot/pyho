@@ -7,7 +7,8 @@ import zmq
 currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
-from utils import optimizer_arguments, Timer, ClientComm
+from utils import optimizer_arguments, Timer
+from communication import ClientComm
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
