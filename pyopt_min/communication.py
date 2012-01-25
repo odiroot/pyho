@@ -65,6 +65,14 @@ class ClientComm(MessageType):
         self.receiver.bind(sub_addr)
         time.sleep(0.5)  # Wait for socket synchronization.
 
+    def close(self, linger=1000):
+        self.sender.setsockopt(zmq.LINGER, linger)
+        self.receiver.setsockopt(zmq.LINGER, linger)
+        self.sender.close()
+        self.receiver.close()
+        if self.store:
+            print "Warning: client communicator store not empty."
+
     def request(self, msg, s_id, m_type=None):
         self.sender.send_json({
             "data": msg,

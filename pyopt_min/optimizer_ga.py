@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import os
 import sys
-import zmq
 import tempfile
+import subprocess
+import atexit
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
@@ -62,11 +63,24 @@ def main():
         push_addr = "ipc://%s" % push_ipc
         sub_addr = "ipc://%s" % sub_ipc
 
-        evaluator_args = ' '.join(unknown) + " -local"
-        evaluator_args += " -pull-address %s" % push_ipc
-        evaluator_args += " -publish-address %s" % sub_ipc
-        print evaluator_args
-        # TODO: Start workers
+        # Arguments to be passed to evaluator processes.
+        evaluator_args = unknown + ["-local", "-pull-address", push_ipc,
+            "-publish-address", sub_ipc]
+
+        workers = []
+        # Launch desired number of worker processes.
+        for i in range(args.workers or 1):
+            # TODO: Changing evaluator path.
+            command = ["./evaluator_block.py"] + evaluator_args
+            p = subprocess.Popen(command, stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            workers.append(p)
+
+        # Kill children workers at exit.
+        @atexit.register
+        def stop_workers():
+            for proc in workers:
+                proc.kill()
 
     else:  # Network mode.
         push_addr = "tcp://*:%d" % args.push
@@ -118,9 +132,14 @@ def main():
     #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList(),
     #         args.density)
 
-    # TODO: Bfile.
-    if cc.store:
-        print "Warning: client communicator store not empty."
+    # Cleaning state.
+    # Broadcast exit messages.
+    if args.send_exit:
+        for i in range(10):
+            cc.request("", 0, cc.EXIT_SIGNAL)
+    # Close communicator.
+    cc.close()
+
 
 if __name__ == '__main__':
     main()

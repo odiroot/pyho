@@ -21,6 +21,8 @@ def optimizer_arguments():
     parser.add_argument("-local-workers", metavar="<number>", dest="workers",
         type=int, default=None, help=u"Activates local computation mode"
         " with a specified number of workers. Uses IPC communication.")
+    parser.add_argument("-send-exit", action="store_true", default=False,
+        help=u"Whether to kill remote workers on optimizer exit")
 
     # Genetic Algorithm parameters.
     parser.add_argument("-seed", metavar="<value>", dest="seed",

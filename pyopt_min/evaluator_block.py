@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import sys
-import zmq
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
