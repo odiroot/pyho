@@ -11,6 +11,10 @@ class MessageType(object):
     RESP_CONSTRAINTS = 2
     DO_EVALUATION = 10
     SCORE = 11
+    SAVE_CBLOCK = 20
+    CBLOCK_SAVED = 21
+    SAVE_XML = 30
+    XML_SAVED = 31
 
     EXIT_SIGNAL = 99
 

@@ -50,10 +50,22 @@ def main():
         print "Exiting due to a remote command..."
         sys.exit(0)
 
+    def handle_save_cblock(data, s_id, comm):
+        params = data["params"]
+        bridge.save_cblock(args.outcb, params)
+        comm.send({"status": 0}, s_id, comm.CBLOCK_SAVED)
+
+    def handle_save_xml(data, s_id, comm):
+        params = data["params"]
+        bridge.save_xml(args.outxml, params, args.density)
+        comm.send({"status": 0}, s_id, comm.XML_SAVED)
+
     # Assign handlers.
     sc[sc.QUERY_CONSTRAINTS] = handle_constraints
     sc[sc.DO_EVALUATION] = handle_evaluation
     sc[sc.EXIT_SIGNAL] = handle_exit
+    sc[sc.SAVE_CBLOCK] = handle_save_cblock
+    sc[sc.SAVE_XML] = handle_save_xml
 
     while True:  # The famous Main Loop.
         # Wait for the request and handle it.

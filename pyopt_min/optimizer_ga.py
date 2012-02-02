@@ -136,19 +136,27 @@ def main():
 
     ## TODO: End of evaluation output and files. ##
     # bridge.coil_to_print(ga.bestIndividual().getInternalList())
-    # # CBlock output.
-    # if args.outcb:
-    #     bridge.save_cblock(args.outcb)
-    # # XML output.
-    # if args.outxml:
-    #     bridge.save_xml(args.outxml, ga.bestIndividual().getInternalList(),
-    #         args.density)
+
+    # TODO: We don't know if user specified paths
+    # Save optimization results CBlock output.
+    data = {"params": ga.bestIndividual().getInternalList()}
+    cc.request(data, 1, cc.SAVE_CBLOCK)
+    resp = cc.response_wait(1, cc.CBLOCK_SAVED)
+    if resp["status"] == 0:
+        print "Saved CBlock file."
+
+    # XML output.
+    data = {"params": ga.bestIndividual().getInternalList()}
+    cc.request(data, 2, cc.SAVE_XML)
+    resp = cc.response_wait(2, cc.XML_SAVED)
+    if resp["status"] == 0:
+        print "Saved XML file."
 
     # Cleaning state.
     # Broadcast exit messages.
     if args.send_exit:
         for i in range(10):
-            cc.request("", 0, cc.EXIT_SIGNAL)
+            cc.request("", 99, cc.EXIT_SIGNAL)
     # Close communicator.
     cc.close()
 
