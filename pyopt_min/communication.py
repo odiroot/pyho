@@ -22,20 +22,13 @@ class MessageType(object):
 
 
 class BaseServerComm(MessageType):
-    pass
-
-
-class LocalServerComm(BaseServerComm):
     handlers = {}
 
-    def __init__(self, pull_addr, pub_addr, context=None):
+    def __init__(self, context=None):
         self.ctx = context or zmq.Context()
 
-        self.listener = self.ctx.socket(zmq.PULL)
-        self.listener.connect(pull_addr)
-
-        self.publisher = self.ctx.socket(zmq.PUB)
-        self.publisher.connect(pub_addr)
+        self.listener = None
+        self.publisher = None
 
     def receive(self):
         return self.listener.recv_json()
@@ -58,6 +51,17 @@ class LocalServerComm(BaseServerComm):
 
     def __setitem__(self, m_type, func):
         self.handlers[m_type] = func
+
+
+class LocalServerComm(BaseServerComm):
+    def __init__(self, addresses, context=None):
+        super(LocalServerComm, self).__init__(context)
+
+        self.listener = self.ctx.socket(zmq.PULL)
+        self.listener.connect(addresses[0])
+
+        self.publisher = self.ctx.socket(zmq.PUB)
+        self.publisher.connect(addresses[1])
 
 
 class BaseClientComm(MessageType):
@@ -115,7 +119,7 @@ class BaseClientComm(MessageType):
 
 class LocalClientComm(BaseClientComm):
     def __init__(self, addresses=None, context=None):
-        self.ctx = context or zmq.Context()
+        super(LocalClientComm, self).__init__(context)
 
         if addresses:  # If not specified generate temporary sockets.
             self.push_addr, self.sub_addr = addresses

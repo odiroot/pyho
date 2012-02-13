@@ -63,18 +63,19 @@ def main():
                 Evaluation process(es) is unlikely to start.
                 Check for -coil, -grid, -fine arguments
             """
-        print "Starting optimization with local workers (%d)" % args.workers
+        print ("Starting optimization with local workers (%d)" %
+            args.local_workers)
 
         # Prepare the ZeroMQ communication layer.
         cc = LocalClientComm()
 
         # Arguments to be passed to evaluator processes.
-        evaluator_args = unknown + ["-local", "-pull-address", cc.push_addr,
-            "-publish-address", cc.sub_addr]
+        evaluator_args = unknown + ["-local-mode", "-local-pull-address",
+            cc.push_addr, "-local-publish-address", cc.sub_addr]
 
         workers = []
         # Launch desired number of worker processes.
-        for i in range(args.workers):
+        for i in range(args.local_workers):
             # TODO: Changing evaluator path.
             this_dir = os.path.dirname(os.path.abspath(__file__))
             command = os.path.join(this_dir, "evaluator_block.py")

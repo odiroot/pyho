@@ -10,21 +10,17 @@ pyximport.install()
 from bridge import bridge
 
 from utils import evaluator_arguments
-from communication import ServerComm
+from communication import LocalServerComm
 
 
 def main():
     args = evaluator_arguments().parse_args()
 
-    if args.local:
-        pull_addr = "ipc://%s" % args.pull
-        pub_addr = "ipc://%s" % args.publish
+    if args.local_mode:
+        # Prepare the ZeroMQ communication layer.
+        sc = LocalServerComm(addresses=[args.local_pull, args.local_publish])
     else:
-        pull_addr = "tcp://%s" % args.pull
-        pub_addr = "tcp://%s" % args.publish
-
-    # Prepare the ZeroMQ communication layer.
-    sc = ServerComm(pull_addr=pull_addr, pub_addr=pub_addr)
+        raise NotImplementedError
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
     bridge.prepare(args)

@@ -55,15 +55,16 @@ def evaluator_arguments():
     # Run settings
     parser.add_argument("-log", metavar="<logfile>", dest="logfile",
         type=str, help=u"log file path")
-    parser.add_argument("-pull-address", metavar="<address>", dest="pull",
-        type=str, default="localhost:5555",
-        help=u"Listening address of task manager")
-    parser.add_argument("-publish-address", metavar="<address>",
-        dest="publish", type=str, default="localhost:5556",
-        help=u"Task result publishing address")
-    parser.add_argument("-local", action="store_true", default=False,
+
+    # Local mode.
+    parser.add_argument("-local-mode", action="store_true", default=False,
         help=u"Work as a local worker communicating through IPC."
         " Should be launched automatically by the optimizer process.")
+    local = parser.add_argument_group("Local mode")
+    local.add_argument("-local-pull-address", metavar="<address>",
+        dest="local_pull", type=str, help=u"Listening address of task manager")
+    local.add_argument("-local-publish-address", metavar="<address>",
+        dest="local_publish", type=str, help=u"Task result publishing address")
 
     # Input files.
     parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",

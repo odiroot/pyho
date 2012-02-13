@@ -11,6 +11,7 @@
     -xml ${OUT_XML} \
     -cblock ${OUT_CBL} \
     -stopflag ${STOP_FILE} \
+    -local-workers 2 \
     $@
 ##
 
