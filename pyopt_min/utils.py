@@ -14,13 +14,21 @@ def optimizer_arguments():
         type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
         type=str, help=u"path to the stop-signalling file")
-    parser.add_argument("-push-address", metavar="<port>", dest="push",
-        type=int, default=5555, help=u"Evaluation task manager listen port")
-    parser.add_argument("-subscribe-address", metavar="<port>", dest="subscribe",
-        type=int, default=5556, help=u"Task result gatherer listen port")
-    parser.add_argument("-local-workers", metavar="<number>", dest="workers",
-        type=int, default=1, help=u"Activates local computation mode"
-        " with a specified number of workers. Uses IPC communication.")
+
+    workers = parser.add_mutually_exclusive_group()
+    workers.add_argument("-local-workers", metavar="<number>",
+        dest="local_workers", type=int,
+        help=u"Activates local computation mode with a specified number of"
+            " workers. Uses IPC communication.")
+    workers.add_argument("-remote-workers", metavar="<worker adresses>",
+        dest="remote_workers", type=str, help=u"""
+            A list of worker processes listening addresses e.g.:
+            "host1,host2,host3" or
+            "host1:pull_port:publish_port,host2:pull_port:publish_port"
+            Pull port is used to receive tasks from manager process, it
+            defaults to 5558.
+            Publish port is used to send results back to manager process, it
+            defaults to 5559.""")
     parser.add_argument("-send-exit", action="store_true", default=False,
         help=u"Whether to kill remote workers on optimizer exit")
 

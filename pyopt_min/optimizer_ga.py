@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 import os
 import sys
-import tempfile
 import subprocess
 import atexit
+import time
 
 # Insert path to libs directory.
 currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
 from utils import optimizer_arguments, Timer
-from communication import ClientComm
+from communication import LocalClientComm
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
@@ -48,42 +48,43 @@ class MemoizedObjective(object):
 
 def main():
     # TODO:
-    # 3. After evolution print gest best info.
-    # 4. Saving output files.
+    # 3. After evolution print best info.
+    # **4. Saving output files.
     # 5. Output messages transport via PUB/SUB.
+    # 6. Changing evaluator path as an argument.
     args, unknown = optimizer_arguments().parse_known_args()
 
-    if args.workers:  # Local mode.
+    if args.local_workers:  # Local mode.
         # Check sanity.
         if ("-coil" not in unknown or "-grid" not in unknown
             or "-fine" not in unknown):
-            print "\nYou probably missed some important arguments."
-            print "Evaluation process(es) is unlikely to start."
-            print "Check for -coil, -grid, -fine arguments.\n"
-        print "Starting optimization with local workers (%d)" % args.workers or 1
+            print """
+                You probably missed some important arguments.
+                Evaluation process(es) is unlikely to start.
+                Check for -coil, -grid, -fine arguments
+            """
+        print "Starting optimization with local workers (%d)" % args.workers
 
-        # Generate temporary paths to avoid collisions.
-        fn, push_ipc = tempfile.mkstemp("pyho_push")
-        os.close(fn)
-        fn, sub_ipc = tempfile.mkstemp("pyho_sub")
-        os.close(fn)
-
-        push_addr = "ipc://%s" % push_ipc
-        sub_addr = "ipc://%s" % sub_ipc
+        # Prepare the ZeroMQ communication layer.
+        cc = LocalClientComm()
 
         # Arguments to be passed to evaluator processes.
-        evaluator_args = unknown + ["-local", "-pull-address", push_ipc,
-            "-publish-address", sub_ipc]
+        evaluator_args = unknown + ["-local", "-pull-address", cc.push_addr,
+            "-publish-address", cc.sub_addr]
 
         workers = []
         # Launch desired number of worker processes.
-        for i in range(args.workers or 1):
+        for i in range(args.workers):
             # TODO: Changing evaluator path.
             this_dir = os.path.dirname(os.path.abspath(__file__))
             command = os.path.join(this_dir, "evaluator_block.py")
             p = subprocess.Popen([command] + evaluator_args,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             workers.append(p)
+
+        # Wait until (presumably) all workers are awake and ready
+        # to avoid unfair distribution of tasks.
+        time.sleep(1)
 
         # Kill children workers at exit.
         @atexit.register
@@ -92,12 +93,9 @@ def main():
                 proc.kill()
 
     else:  # Network mode.
-        push_addr = "tcp://*:%d" % args.push
-        sub_addr = "tcp://*:%d" % args.subscribe
+        raise NotImplementedError
         print "Starting optimization with network workers"
 
-    # Prepare the ZeroMQ communication layer.
-    cc = ClientComm(push_addr=push_addr, sub_addr=sub_addr)
     print "Waiting for initial connection"
 
     # Fetch constraints from any worker.

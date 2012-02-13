@@ -1,5 +1,7 @@
-import zmq
+import os
 import time
+import tempfile
+import zmq
 
 
 class MessageTypeError(ValueError):
@@ -19,7 +21,11 @@ class MessageType(object):
     EXIT_SIGNAL = 99
 
 
-class ServerComm(MessageType):
+class BaseServerComm(MessageType):
+    pass
+
+
+class LocalServerComm(BaseServerComm):
     handlers = {}
 
     def __init__(self, pull_addr, pub_addr, context=None):
@@ -54,20 +60,15 @@ class ServerComm(MessageType):
         self.handlers[m_type] = func
 
 
-class ClientComm(MessageType):
+class BaseClientComm(MessageType):
     store = {}
     POLL_INTERVAL = 1 / 1000
 
-    def __init__(self, push_addr, sub_addr, context=None):
+    def __init__(self, context=None):
         self.ctx = context or zmq.Context()
 
-        self.sender = self.ctx.socket(zmq.PUSH)
-        self.sender.bind(push_addr)
-
-        self.receiver = self.ctx.socket(zmq.SUB)
-        self.receiver.setsockopt(zmq.SUBSCRIBE, '')
-        self.receiver.bind(sub_addr)
-        time.sleep(0.5)  # Wait for socket synchronization.
+        self.sender = None
+        self.receiver = None
 
     def close(self, linger=1000):
         self.sender.setsockopt(zmq.LINGER, linger)
@@ -110,3 +111,31 @@ class ClientComm(MessageType):
             if resp is not None:
                 return resp
             time.sleep(sleep)
+
+
+class LocalClientComm(BaseClientComm):
+    def __init__(self, addresses=None, context=None):
+        self.ctx = context or zmq.Context()
+
+        if addresses:  # If not specified generate temporary sockets.
+            self.push_addr, self.sub_addr = addresses
+        else:
+            self.push_addr, self.sub_addr = self._prepare_addresses()
+
+        self.sender = self.ctx.socket(zmq.PUSH)
+        self.sender.bind(self.push_addr)
+
+        self.receiver = self.ctx.socket(zmq.SUB)
+        self.receiver.setsockopt(zmq.SUBSCRIBE, '')
+        self.receiver.bind(self.sub_addr)
+
+    def _prepare_addresses(self):
+        # TODO: Handle Windows not supporting IPC.
+        # Generate temporary paths to avoid collisions.
+        fn, push_ipc = tempfile.mkstemp("pyho_push")
+        os.close(fn)
+        fn, sub_ipc = tempfile.mkstemp("pyho_sub")
+        os.close(fn)
+        push_addr = "ipc://%s" % push_ipc
+        sub_addr = "ipc://%s" % sub_ipc
+        return push_addr, sub_addr
