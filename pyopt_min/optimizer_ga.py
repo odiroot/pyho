@@ -52,6 +52,7 @@ def main():
     # **4. Saving output files.
     # 5. Output messages transport via PUB/SUB.
     # 6. Changing evaluator path as an argument.
+    # 7. Old ZMQ version from other branch (guards check)
     args, unknown = optimizer_arguments().parse_known_args()
 
     if args.local_workers:  # Local mode.
