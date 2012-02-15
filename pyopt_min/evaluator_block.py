@@ -50,13 +50,19 @@ def main():
 
     def handle_save_cblock(data, s_id, comm):
         params = data["params"]
-        bridge.save_cblock(args.outcb, params)
-        comm.send({"status": 0}, s_id, comm.CBLOCK_SAVED)
+        if args.outcb:
+            bridge.save_cblock(args.outcb, params)
+            comm.send({"status": 0}, s_id, comm.CBLOCK_SAVED)
+        else:
+            comm.send({"status": -1}, s_id, comm.CBLOCK_SAVED)
 
     def handle_save_xml(data, s_id, comm):
         params = data["params"]
-        bridge.save_xml(args.outxml, params, args.density)
-        comm.send({"status": 0}, s_id, comm.XML_SAVED)
+        if args.outxml:
+            bridge.save_xml(args.outxml, params, args.density)
+            comm.send({"status": 0}, s_id, comm.XML_SAVED)
+        else:
+            comm.send({"status": -1}, s_id, comm.XML_SAVED)
 
     # Assign handlers.
     sc[sc.QUERY_CONSTRAINTS] = handle_constraints
