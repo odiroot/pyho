@@ -10,7 +10,7 @@ currdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
 from utils import optimizer_arguments, Timer
-from communication import LocalClientComm
+from communication import LocalClientComm, NetworkClientComm
 from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from ga_common import AlleleG1DList
 
@@ -95,8 +95,25 @@ def main():
                 proc.kill()
 
     else:  # Network mode.
-        raise NotImplementedError
         print "Starting optimization with network workers"
+        if not args.remote_workers:
+            raise RuntimeError("You have to specify a list of remote"
+                " worker addresses")
+
+        # Parse workers addresses.
+        hosts = args.remote_workers.split(",")
+        workers = []
+        for host in hosts:
+            parts = host.split(":")
+            if len(parts) == 3:  # Full format.
+                workers.append(tuple(parts))
+            else:  # Hostname only or wrong format.
+                workers.append((parts[0], "5558", "5559"))
+
+        # Connect to workers with ZeroMQ.
+        cc = NetworkClientComm(addresses=workers)
+        # Wait until we establish a connection with remote workers.
+        time.sleep(2)
 
     print "Waiting for initial connection"
 

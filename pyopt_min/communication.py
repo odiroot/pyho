@@ -154,3 +154,17 @@ class LocalClientComm(BaseClientComm):
         push_addr = "ipc://%s" % push_ipc
         sub_addr = "ipc://%s" % sub_ipc
         return push_addr, sub_addr
+
+
+class NetworkClientComm(BaseClientComm):
+    def __init__(self, addresses=None, context=None):
+        super(NetworkClientComm, self).__init__(context)
+
+        self.sender = self.ctx.socket(zmq.PUSH)
+        self.receiver = self.ctx.socket(zmq.SUB)
+        self.receiver.setsockopt(zmq.SUBSCRIBE, '')
+
+        for node in addresses:
+            host = node[0]
+            self.sender.connect("tcp://%s:%s" % (host, node[1]))
+            self.receiver.connect("tcp://%s:%s" % (host, node[2]))

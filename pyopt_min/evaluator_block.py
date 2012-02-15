@@ -18,8 +18,10 @@ def main():
 
     if args.local_mode:
         # Prepare the ZeroMQ communication layer.
+        print "Starting Evalutor in local mode."
         sc = LocalServerComm(addresses=[args.local_pull, args.local_publish])
     else:
+        print "Starting Evalutor in network mode."
         sc = NetworkServerComm(ports=[args.network_pull, args.network_publish])
 
     # Prepare the C++ layer of optimizer through the Cython bridge.
