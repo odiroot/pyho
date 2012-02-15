@@ -14,6 +14,9 @@ def optimizer_arguments():
         type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
         type=str, help=u"path to the stop-signalling file")
+    parser.add_argument("-evaluator-path", metavar="<path>", dest="evaluator",
+        type=str, help=u"Used only in local mode. Path to the evaluator"
+            " launcher. If not specified block coil evaluator is assumed.")
 
     workers = parser.add_mutually_exclusive_group()
     workers.add_argument("-local-workers", metavar="<number>",
@@ -29,8 +32,6 @@ def optimizer_arguments():
             defaults to 5558.
             Publish port is used to send results back to manager process, it
             defaults to 5559.""")
-    parser.add_argument("-send-exit", action="store_true", default=False,
-        help=u"Whether to kill remote workers on optimizer exit")
 
     # Genetic Algorithm parameters.
     parser.add_argument("-seed", metavar="<value>", dest="seed",
@@ -75,7 +76,7 @@ def evaluator_arguments():
     parser.add_argument("-xml", metavar="<out-xml-file>", dest="outxml",
         type=str, help=u"output of the optimization process")
     parser.add_argument("-cblock", metavar="<out-cblock-file>", dest="outcb",
-        type=str, help=u"???")
+        type=str, help=u"CBlock format coil output")
     # Model parameters.
     parser.add_argument("-fine", metavar="<density>", dest="density",
         required=True, type=int, help=u"grid density for final evaluation")

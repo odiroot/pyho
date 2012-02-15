@@ -49,9 +49,6 @@ class MemoizedObjective(object):
 def main():
     # TODO:
     # 3. After evolution print best info.
-    # **4. Saving output files.
-    # 5. Output messages transport via PUB/SUB.
-    # 6. Changing evaluator path as an argument.
     # 7. Old ZMQ version from other branch (guards check)
     args, unknown = optimizer_arguments().parse_known_args()
 
@@ -76,10 +73,13 @@ def main():
 
         workers = []
         # Launch desired number of worker processes.
-        for i in range(args.local_workers):
-            # TODO: Changing evaluator path.
+        if args.evaluator:
+            command = args.evaluator
+        else:
             this_dir = os.path.dirname(os.path.abspath(__file__))
             command = os.path.join(this_dir, "evaluator_block.py")
+
+        for i in range(args.local_workers):
             p = subprocess.Popen([command] + evaluator_args,
                 stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             workers.append(p)
@@ -152,11 +152,6 @@ def main():
     if resp["status"] == 0:
         print "Saved XML file."
 
-    # Cleaning state.
-    # Broadcast exit messages.
-    if args.send_exit:
-        for i in range(10):
-            cc.request("", 99, cc.EXIT_SIGNAL)
     # Close communicator.
     cc.close()
 
