@@ -68,7 +68,8 @@ def prepare(object args):
     # Prepare the reference coil and evaluate.
     cdef float std_dev, err
     prepare_reference_value(std_dev, err)
-    print "std. dev. = %g, error = %g" % (std_dev, err)
+    print ("Starting with reference coil: std. dev. = %g, error = %g" %
+        (std_dev, err))
 
 
 def get_optimization_params():

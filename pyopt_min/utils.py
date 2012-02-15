@@ -67,6 +67,14 @@ def evaluator_arguments():
     local.add_argument("-local-publish-address", metavar="<address>",
         dest="local_publish", type=str, help=u"Task result publishing address")
 
+    network = parser.add_argument_group("Network mode")
+    network.add_argument("-network-pull-port", metavar="<port>",
+        dest="network_pull", type=str, default="5558",
+        help=u"Listening port for task manager commands")
+    network.add_argument("-network-publish-port", metavar="<port>",
+        dest="network_publish", type=str, default="5559",
+        help=u"Listening port for task result broadcasting")
+
     # Input files.
     parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
         required=True, type=str, help=u"model coil definition")

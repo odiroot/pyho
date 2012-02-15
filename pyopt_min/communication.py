@@ -64,6 +64,17 @@ class LocalServerComm(BaseServerComm):
         self.publisher.connect(addresses[1])
 
 
+class NetworkServerComm(BaseServerComm):
+    def __init__(self, ports, context=None):
+        super(NetworkServerComm, self).__init__(context)
+
+        self.listener = self.ctx.socket(zmq.PULL)
+        self.listener.bind("tcp://*:%s" % ports[0])
+
+        self.publisher = self.ctx.socket(zmq.PUB)
+        self.publisher.bind("tcp://*:%s" % ports[1])
+
+
 class BaseClientComm(MessageType):
     store = {}
     POLL_INTERVAL = 1 / 1000
