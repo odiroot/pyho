@@ -1,0 +1,27 @@
+# vim: set filetype=python :
+import os
+from distutils.extension import Extension
+
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+LIBRARY_DIR = os.path.abspath(os.path.join(THIS_DIR, os.path.pardir,
+    "levmar-2.5"))
+
+
+def get_library_sources():
+    src = ('lm.c', 'Axb.c', 'misc.c', 'lmlec.c', 'lmbc.c', 'lmblec.c',
+           'lmbleic.c',)
+    src = [os.path.join(LIBRARY_DIR, f) for f in src]
+    return src
+
+
+def make_ext(modname, pyxfilename):
+    core_source = os.path.join(THIS_DIR, os.path.basename(pyxfilename))
+
+    return Extension(
+        name=modname,
+        sources=[core_source] + get_library_sources(),
+        include_dirs=[THIS_DIR, LIBRARY_DIR],
+        depends=[core_source] + get_library_sources(),
+        libraries=['lapack', 'blas'],
+    )
