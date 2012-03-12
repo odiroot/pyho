@@ -21,7 +21,7 @@ def make_ext(modname, pyxfilename):
         "blockcoil"))
 
     COIL_PATHS = [path.join(CB, m) for m in COIL_MODULES]
-    COIL_PATHS.append(path.join(this_dir, "optimizer_wrapper.cpp"))
+    COIL_PATHS.append(path.join(this_dir, "blockcoil_wrapper.cpp"))
     
     return Extension(
         name=modname,
