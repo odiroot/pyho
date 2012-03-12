@@ -6,10 +6,10 @@ import atexit
 import time
 
 # Insert path to libs directory.
-currdir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
+from utils import libs_to_path
+libs_to_path()
 
-from utils import optimizer_arguments, Timer
+from utils import optimizer_arguments, Timer, printf
 from communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
@@ -56,12 +56,13 @@ def main():
         # Check sanity.
         if ("-coil" not in unknown or "-grid" not in unknown
             or "-fine" not in unknown):
-            print """
-                You probably missed some important arguments.
-                Evaluation process(es) is unlikely to start.
-                Check for -coil, -grid, -fine arguments
-            """
-        print ("Starting optimization with local workers (%d)" %
+            printf("You probably missed some important arguments."
+                "Evaluation process(es) is unlikely to start."
+                "Check for -coil, -grid, -fine arguments."
+                "Exiting.")
+            sys.exit(0)
+
+        printf("Starting optimization with local workers (%d)" %
             args.local_workers)
 
         # Prepare the ZeroMQ communication layer.
@@ -95,7 +96,7 @@ def main():
                 proc.kill()
 
     else:  # Network mode.
-        print "Starting optimization with network workers"
+        printf("Starting optimization with network workers")
         if not args.remote_workers:
             raise RuntimeError("You have to specify a list of remote"
                 " worker addresses")
@@ -115,7 +116,7 @@ def main():
         # Wait until we establish a connection with remote workers.
         time.sleep(2)
 
-    print "Waiting for initial connection"
+    printf("Waiting for initial connection")
 
     # Fetch constraints from any worker.
     cc.request("", 0, cc.QUERY_CONSTRAINTS)
@@ -123,7 +124,7 @@ def main():
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
-    print "Received initial data from workers"
+    printf("Received initial data from workers")
 
     # Prepare the GA engine.
     # Initialize genome with constraints.
@@ -140,8 +141,8 @@ def main():
     ga.setParams(stop_file=args.stopflag)
 
     # Fire the Genetic Algorithm Engine.
-    print "Starting GA: %d generations of %d individuals" % (ga.nGenerations,
-        ga.getPopulation().popSize)
+    printf("Starting GA: %d generations of %d individuals" % (ga.nGenerations,
+        ga.getPopulation().popSize))
     timer = Timer().start()
     ga.setParams(timer=timer)
     ga.evolve()

@@ -1,7 +1,23 @@
 u"""Various utilities for PyHO."""
 import argparse
+import os
 import sys
 import time
+
+
+def printf(txt):
+    u"Print and flush the stdout"
+    print txt
+    sys.stdout.flush()
+
+
+def libs_to_path():
+    u"Adds Python path entry pointing to libraries shipped in this project."
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.abspath(os.path.join(current_dir, os.path.pardir))
+    libs_dir = os.path.join(base_dir, "libs")
+    if libs_dir not in sys.path:
+        sys.path.append(libs_dir)
 
 
 def optimizer_arguments():

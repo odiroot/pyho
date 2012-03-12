@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-import os
 import sys
-
 # Insert path to libs directory.
-currdir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
+from utils import libs_to_path
+libs_to_path()
+# Initialize pyximport
 import pyximport
 pyximport.install()
-from bridge_block import bridge
 
+from bridge_block import bridge
 from utils import evaluator_arguments
 from communication import LocalServerComm, NetworkServerComm
 

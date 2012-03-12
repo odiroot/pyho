@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import time
 from itertools import izip
 from random import randint, uniform, random
@@ -13,6 +12,8 @@ from pyevolve.GSimpleGA import GSimpleGA
 from pyevolve import Util
 from pyevolve.GPopulation import GPopulation
 from pyevolve import Consts
+
+from utils import printf
 
 
 def stop_flag_criteria(ga_engine):
@@ -35,8 +36,7 @@ def stats_step_callback(ga):
         gens_left = ga.nGenerations - ga.currentGeneration
         mean_time = timer.time_so_far / ga.currentGeneration
         pstr += "\t(est. time to end=%d s.)" % (gens_left * mean_time)
-    print pstr
-    sys.stdout.flush()
+    printf(pstr)
 
 
 ## Custom Genetic operators (and other classes). ##
