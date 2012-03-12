@@ -11,8 +11,8 @@ sys.path.append(os.path.join(currdir, os.path.pardir, "libs"))
 
 from utils import optimizer_arguments, Timer
 from communication import LocalClientComm, NetworkClientComm
-from ga_common import CustomG1DList, CustomGSimpleGA, stats_step_callback
-from ga_common import AlleleG1DList
+from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
+from genetic import AlleleG1DList
 
 
 class MemoizedObjective(object):
