@@ -20,6 +20,14 @@ def libs_to_path():
         sys.path.append(libs_dir)
 
 
+def check_stop_flag(path):
+    u"Checks whether user stop flag (file) is present"
+    if path:
+        return os.path.exists(path)
+    else:
+        return False
+
+
 def optimizer_arguments():
     parser = argparse.ArgumentParser()
     parser.description = u"Genetic Algorithm optimizer for coil design."

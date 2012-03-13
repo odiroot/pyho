@@ -9,7 +9,7 @@ import time
 from utils import libs_to_path
 libs_to_path()
 
-from utils import optimizer_arguments, Timer, printf
+from utils import optimizer_arguments, Timer, printf, check_stop_flag
 from communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
@@ -55,12 +55,10 @@ def main():
     if args.local_workers:  # Local mode.
         # Check sanity.
         if ("-coil" not in unknown or "-grid" not in unknown
-            or "-fine" not in unknown):
+                or "-fine" not in unknown):
             printf("You probably missed some important arguments."
-                "Evaluation process(es) is unlikely to start."
-                "Check for -coil, -grid, -fine arguments."
-                "Exiting.")
-            sys.exit(0)
+                " Evaluation process(es) is unlikely to start."
+                " Check for -coil, -grid, -fine arguments.")
 
         printf("Starting optimization with local workers (%d)" %
             args.local_workers)
@@ -82,7 +80,9 @@ def main():
 
         for i in range(args.local_workers):
             p = subprocess.Popen([command] + evaluator_args,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                #stderr=subprocess.PIPE
+                )
             workers.append(p)
 
         # Wait until (presumably) all workers are awake and ready
@@ -117,10 +117,10 @@ def main():
         time.sleep(2)
 
     printf("Waiting for initial connection")
-
     # Fetch constraints from any worker.
     cc.request("", 0, cc.QUERY_CONSTRAINTS)
     resp = cc.response_wait(0, cc.RESP_CONSTRAINTS)
+
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]

@@ -13,16 +13,13 @@ from pyevolve import Util
 from pyevolve.GPopulation import GPopulation
 from pyevolve import Consts
 
-from utils import printf
+from utils import printf, check_stop_flag
 
 
 def stop_flag_criteria(ga_engine):
     u"GA Engine stop criteria depending on stop flag file."
-    stop_file = ga_engine.getParam("stop_file", None)
-    if stop_file:
-        return os.path.exists(stop_file)
-    else:
-        return False
+    path = ga_engine.getParam("stop_file", None)
+    return check_stop_flag(path)
 
 
 def stats_step_callback(ga):
