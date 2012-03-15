@@ -16,15 +16,24 @@ Current status
     - `Local mode` with automatic worker management (``-local-workers`` option, one worker by default)
     - `Network mode` with arbitrary number of worker nodes
 - Currently optimizer and worker processes need access to the same file system (passing files through the network channel is not implemented nor designed)
-- Optimizer can be successfully launched by the `FMDT` GUI. Optimization progress is being displayed but no output files are saved yet (to be done)
+- Optimizer can be successfully launched by the `FMDT` GUI. 
+    - Optimization progress is being displayed.
+    - Output XML/CBL files are being saved (work in progress).
 
 
 Dependencies
 ------------
-**PyHO requires a working installation of** `PyZMQ` **Python package.**
-This usually means you have to install ``libzmq1`` and ``python-zmq`` packages. For example in Debian-like systems:
 
-    ``$ sudo apt-get install libzm1 python-zmq``
+**PyHO has some hard dependencies**:
+
+* ``zmq`` Python package (called ``python-zmq`` in Debian based systems) - version 2.1.9 or newer is highly recommended
+* The `ZeroMQ` library (or ``libzmq1``) with sources (``libzmq-dev``) - again the 2.1.9+ version is preferred.
+
+If you want to use hybrid optimization mode make sure you also have:
+
+* Source distribution of BLAS (``libblas-dev``) and LAPACK (``liblapack-dev``) libraries
+* The `NumPy` Python library (try ``python-numpy``)
+
 
 PyHO also uses following Python packages:
 
@@ -36,6 +45,9 @@ PyHO also uses following Python packages:
 All these libraries are included in the ``libs`` directory for convenience.
 When present in the standard Python path, system installed versions take
 precedence.
+
+**A note of warning**: This project uses custom ``levmar`` package, officially available version cannot be used, as it will break during hybrid optimization.
+
 
 Quick start
 -----------
