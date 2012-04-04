@@ -5,7 +5,7 @@ import sys
 cdef extern from *:
     ctypedef float real
 
-cdef extern from "blockcoil_wrapper.h":
+cdef extern from "wrapper.h":
     void redirect_log(char* path)
     int get_coil(char* coil_path, int& nsect, int& nvars)
     void prepare_constraints()

@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <fstream>
-#include "blockcoil_wrapper.h"
+#include "wrapper.h"
 #include "ptreal.h"
 #include "latticegrid.h"
 #include "paramcoil.h"

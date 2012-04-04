@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 import sys
 # Insert path to libs directory.
-from utils import libs_to_path
+from common.utils import libs_to_path
 libs_to_path()
 # Initialize pyximport
 import pyximport
 pyximport.install()
 
-from bridge_block import bridge
-from utils import evaluator_arguments
+import bridge
+from common.utils import evaluator_arguments
 from communication import LocalServerComm, NetworkServerComm
 
 
@@ -73,7 +73,3 @@ def main():
     while True:  # The famous Main Loop.
         # Wait for the request and handle it.
         sc.all_handle()
-
-
-if __name__ == '__main__':
-    main()
