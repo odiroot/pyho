@@ -7,13 +7,10 @@ import pyximport
 pyximport.install()
 
 import bridge
-from common.utils import evaluator_arguments
 from common.communication import LocalServerComm, NetworkServerComm
 
 
-def main():
-    args = evaluator_arguments().parse_args()
-
+def main(args):
     if args.local_mode:
         # Prepare the ZeroMQ communication layer.
         print "Starting Evalutor in local mode."
@@ -72,3 +69,6 @@ def main():
     while True:  # The famous Main Loop.
         # Wait for the request and handle it.
         sc.all_handle()
+
+
+__all__ = ["main"]

@@ -1,5 +1,4 @@
 u"""Various utilities for PyHO."""
-import argparse
 import os
 import sys
 import time
@@ -26,108 +25,6 @@ def check_stop_flag(path):
         return os.path.exists(path)
     else:
         return False
-
-
-def optimizer_arguments():
-    parser = argparse.ArgumentParser()
-    parser.description = u"Genetic Algorithm optimizer for coil design."
-    parser.epilog = u"""This application is a part of PyHO package."""
-
-    # Run settings.
-    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
-        type=str, help=u"log file path")
-    parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
-        type=str, help=u"path to the stop-signalling file")
-    parser.add_argument("-evaluator-path", metavar="<path>", dest="evaluator",
-        type=str, help=u"Used only in local mode. Path to the evaluator"
-            " launcher. If not specified block coil evaluator is assumed.")
-
-    workers = parser.add_mutually_exclusive_group()
-    workers.add_argument("-local-workers", metavar="<number>",
-        dest="local_workers", type=int,
-        help=u"Activates local computation mode with a specified number of"
-            " workers. Uses IPC communication.")
-    workers.add_argument("-remote-workers", metavar="<worker adresses>",
-        dest="remote_workers", type=str, help=u"""
-            A list of worker processes listening addresses e.g.:
-            "host1,host2,host3" or
-            "host1:pull_port:publish_port,host2:pull_port:publish_port"
-            Pull port is used to receive tasks from manager process, it
-            defaults to 5558.
-            Publish port is used to send results back to manager process, it
-            defaults to 5559.""")
-
-    # Genetic Algorithm parameters.
-    parser.add_argument("-seed", metavar="<value>", dest="seed",
-        type=int, help=u"start the evolution with a specified random seed")
-    parser.add_argument("-ngen", metavar="<value>", dest="ngen",
-        type=int, help=u"number of GA generations to run")
-    parser.add_argument("-popsize", metavar="<value>", dest="popsize",
-        type=int, help=u"size of the GA population")
-    parser.add_argument("-allele", metavar="<switch>", dest="allele",
-        type=bool, help=u"Whether to use Allele operators", default=False)
-    # Not much use right now.
-    #parser.add_argument("-algorithm", dest="algorithm",
-    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
-    return parser
-
-
-def evaluator_arguments():
-    parser = argparse.ArgumentParser()
-    parser.description = u"Coil evaluator for optimal coil design."
-    parser.epilog = u"""This application is a part of PyHO package."""
-
-    # Run settings
-    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
-        type=str, help=u"log file path")
-
-    # Local mode.
-    parser.add_argument("-local-mode", action="store_true", default=False,
-        help=u"Work as a local worker communicating through IPC."
-        " Should be launched automatically by the optimizer process.")
-    local = parser.add_argument_group("Local mode")
-    local.add_argument("-local-pull-address", metavar="<address>",
-        dest="local_pull", type=str, help=u"Listening address of task manager")
-    local.add_argument("-local-publish-address", metavar="<address>",
-        dest="local_publish", type=str, help=u"Task result publishing address")
-
-    network = parser.add_argument_group("Network mode")
-    network.add_argument("-network-pull-port", metavar="<port>",
-        dest="network_pull", type=str, default="5558",
-        help=u"Listening port for task manager commands")
-    network.add_argument("-network-publish-port", metavar="<port>",
-        dest="network_publish", type=str, default="5559",
-        help=u"Listening port for task result broadcasting")
-
-    # Input files.
-    parser.add_argument("-coil", metavar="<param-coil-file>", dest="coil",
-        required=True, type=str, help=u"model coil definition")
-    parser.add_argument("-grid", metavar="<grid-file>", dest="grid",
-        required=True, type=str, help=u"grid for optimization")
-    # Output files.
-    parser.add_argument("-xml", metavar="<out-xml-file>", dest="outxml",
-        type=str, help=u"output of the optimization process")
-    parser.add_argument("-cblock", metavar="<out-cblock-file>", dest="outcb",
-        type=str, help=u"CBlock format coil output")
-    # Model parameters.
-    parser.add_argument("-fine", metavar="<density>", dest="density",
-        required=True, type=int, help=u"grid density for final evaluation")
-    parser.add_argument("-Bx", metavar="<value>", dest="Bx",
-        type=float, help=u"set desired absolute value of "
-        "the Bx component")
-    parser.add_argument("-By", metavar="<value>", dest="By",
-        type=float, help=u"set desired absolute value of "
-        "the By component")
-    parser.add_argument("-Bz", metavar="<value>", dest="Bz",
-        type=float, help=u"set desired absolute value of "
-        "the Bz component")
-    # Not used right now.
-    # parser.add_argument("-Bfile", metavar="<out-field-file>", dest="outfield",
-    #     #required=True,
-    #     type=str, help=u"???")
-    # parser.add_argument("-statistics", dest="statistics", action="store_true",
-    #     help=u"???")
-    return parser
 
 
 class Timer(object):

@@ -7,7 +7,7 @@ import time
 from utils import libs_to_path
 libs_to_path()
 
-from common.utils import optimizer_arguments, Timer, printf, check_stop_flag
+from common.utils import Timer, printf, check_stop_flag
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
@@ -50,12 +50,9 @@ def default_evaluator_path():
         "run_bc_evaluator"))
 
 
-def main():
+def main(args, unknown):
     # TODO:
     # 3. After evolution print best info.
-    # 7. Old ZMQ version from other branch (guards check)
-    args, unknown = optimizer_arguments().parse_known_args()
-
     if args.local_workers:  # Local mode.
         # Check sanity.
         if ("-coil" not in unknown or "-grid" not in unknown
@@ -175,3 +172,6 @@ def main():
 
     # Close communicator.
     cc.close()
+
+
+__all__ = ["main"]
