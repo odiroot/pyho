@@ -1,15 +1,14 @@
-#!/usr/bin/env python
-import sys
-# Insert path to libs directory.
 from common.utils import libs_to_path
-libs_to_path()
-# Initialize pyximport
+libs_to_path()  # Insert path to libs directory.
+# TODO: Handle each dependency separately
+
+import sys
 import pyximport
 pyximport.install()
 
 import bridge
 from common.utils import evaluator_arguments
-from communication import LocalServerComm, NetworkServerComm
+from common.communication import LocalServerComm, NetworkServerComm
 
 
 def main():
