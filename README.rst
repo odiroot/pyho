@@ -16,7 +16,7 @@ Current status
     - `Local mode` with automatic worker management (``-local-workers`` option, one worker by default)
     - `Network mode` with arbitrary number of worker nodes
 - Currently optimizer and worker processes need access to the same file system (passing files through the network channel is not implemented nor designed)
-- Optimizer can be successfully launched by the `FMDT` GUI. 
+- Optimizer can be successfully launched by the `FMDT` GUI.
     - Optimization progress is being displayed.
     - Output XML/CBL files are being saved (work in progress).
 
@@ -52,8 +52,8 @@ precedence.
 Quick start
 -----------
 
-You can start the optimizer directly by launching ``run.py`` Python
-module from the ``optimizer`` directory. Running it with ``--help`` option
+You can start the optimizer directly by launching ``run_optimizer`` Python
+script from the root project directory. Running it with ``--help`` option
 will show all available options.
 
 You can also use files from ``assets`` as an example input for the optimizer.
