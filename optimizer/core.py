@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 import os
-import sys
 import subprocess
 import atexit
 import time
@@ -9,8 +7,8 @@ import time
 from utils import libs_to_path
 libs_to_path()
 
-from utils import optimizer_arguments, Timer, printf, check_stop_flag
-from communication import LocalClientComm, NetworkClientComm
+from common.utils import optimizer_arguments, Timer, printf, check_stop_flag
+from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 
@@ -46,6 +44,12 @@ class MemoizedObjective(object):
                 yield None
 
 
+def default_evaluator_path():
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(this_dir, os.path.pardir,
+        "run_bc_evaluator"))
+
+
 def main():
     # TODO:
     # 3. After evolution print best info.
@@ -75,8 +79,7 @@ def main():
         if args.evaluator:
             command = args.evaluator
         else:
-            this_dir = os.path.dirname(os.path.abspath(__file__))
-            command = os.path.join(this_dir, "evaluator_block.py")
+            command = default_evaluator_path()
 
         for i in range(args.local_workers):
             p = subprocess.Popen([command] + evaluator_args,
@@ -172,7 +175,3 @@ def main():
 
     # Close communicator.
     cc.close()
-
-
-if __name__ == '__main__':
-    main()
