@@ -34,12 +34,11 @@ class MemoizedObjective(object):
             while True:
                 if not sent:
                     # Send asynchronous request for evaluation.
-                    self.comm.send_request({"params": p}, uid,
-                        self.comm.DO_EVALUATION)
+                    self.comm.evaluate(p, uid)
                     sent = True
                 if sent:
                     # Try to retrieve evaluation score from the transport.
-                    res = self.comm.get_response(uid, self.comm.SCORE)
+                    res = self.comm.resp_score(uid)
                     if res is not None:
                         self.memo[key] = res["score"]
                         yield res["score"]
@@ -114,12 +113,12 @@ def main(args, unknown):
     # Fetch constraints from any worker.
     _sent = False
     while not _sent:
-        _sent = cc.send_request("", 0, cc.QUERY_CONSTRAINTS, wait=False)
+        _sent = cc.get_options(0, wait=False)
         if check_stop_flag(args.stopflag):
             sys.exit(-1)
-    resp = cc.get_response(0, cc.RESP_CONSTRAINTS, wait=True)
+    resp = cc.resp_options(0, wait=True)
 
-    no_vars = resp["no_vars"]
+    no_vars = resp["num_params"]
     my_min = resp["min_constr"]
     my_max = resp["max_constr"]
     printf("Received initial data from workers")
@@ -153,20 +152,11 @@ def main(args, unknown):
     ## TODO: End of evaluation output and files. ##
     # bridge.coil_to_print(ga.bestIndividual().getInternalList())
 
-    # TODO: We don't know if user specified paths
     # Save optimization results CBlock output.
-    data = {"params": ga.bestIndividual().getInternalList()}
-    cc.send_request(data, 1, cc.SAVE_CBLOCK)
-    resp = cc.get_response(1, cc.CBLOCK_SAVED, wait=True)
-    if resp["status"] == 0:
-        print "Saved CBlock file."
-
-    # XML output.
-    data = {"params": ga.bestIndividual().getInternalList()}
-    cc.send_request(data, 2, cc.SAVE_XML)
-    resp = cc.get_response(2, cc.XML_SAVED, wait=True)
-    if resp["status"] == 0:
-        print "Saved XML file."
+    cc.save_output(ga.bestIndividual().getInternalList(), 1)
+    resp = cc.resp_save(1, wait=True)
+    if resp["status"] == "":
+        print "Saved files: %s" % ', '.join(resp["files"])
 
     # Close communicator.
     cc.close()

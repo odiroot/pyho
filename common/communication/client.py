@@ -5,7 +5,7 @@ import tempfile
 from base import MessageType, MessageTypeError
 
 
-class BaseClientComm(MessageType):
+class BaseClientComm(object):
     store = {}
 
     def __init__(self, context=None):
@@ -60,6 +60,26 @@ class BaseClientComm(MessageType):
                 time.sleep(1 / 1000.)
             else:
                 return resp
+
+    def get_options(self, s_id, **kwargs):
+        return self.send_request({}, s_id, MessageType.GET_OPTIONS, **kwargs)
+
+    def resp_options(self, s_id, **kwargs):
+        return self.get_response(s_id, MessageType.RESP_OPTIONS, **kwargs)
+
+    def evaluate(self, params, s_id, **kwargs):
+        return self.send_request({"params": params}, s_id,
+            MessageType.EVALUATE, **kwargs)
+
+    def resp_score(self, s_id, **kwargs):
+        return self.get_response(s_id, MessageType.RESP_SCORE, **kwargs)
+
+    def save_output(self, params, s_id, **kwargs):
+        return self.send_request({"params": params}, s_id,
+            MessageType.SAVE_OUTPUT, **kwargs)
+
+    def resp_save(self, s_id, **kwargs):
+        return self.get_response(s_id, MessageType.RESP_SAVE, **kwargs)
 
 
 class LocalClientComm(BaseClientComm):
