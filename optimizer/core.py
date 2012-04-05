@@ -1,13 +1,14 @@
 import os
 import subprocess
 import atexit
+import sys
 import time
 
 # Insert path to libs directory.
 from utils import libs_to_path
 libs_to_path()
 
-from common.utils import Timer, printf  # , check_stop_flag
+from common.utils import Timer, printf, check_stop_flag
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
@@ -80,10 +81,6 @@ def main(args, unknown):
                 )
             workers.append(p)
 
-        # Wait until (presumably) all workers are awake and ready
-        # to avoid unfair distribution of tasks.
-        time.sleep(1)
-
         # Kill children workers at exit.
         @atexit.register
         def stop_workers():
@@ -108,12 +105,18 @@ def main(args, unknown):
 
         # Connect to workers with ZeroMQ.
         cc = NetworkClientComm(addresses=workers)
-        # Wait until we establish a connection with remote workers.
-        time.sleep(2)
 
+    # Wait until (presumably) all workers are awake and ready
+    # to avoid unfair distribution of tasks.
+    time.sleep(1)
     printf("Waiting for initial connection")
+
     # Fetch constraints from any worker.
-    cc.send_request("", 0, cc.QUERY_CONSTRAINTS)
+    _sent = False
+    while not _sent:
+        _sent = cc.send_request("", 0, cc.QUERY_CONSTRAINTS, wait=False)
+        if check_stop_flag(args.stopflag):
+            sys.exit(-1)
     resp = cc.get_response(0, cc.RESP_CONSTRAINTS, wait=True)
 
     no_vars = resp["no_vars"]

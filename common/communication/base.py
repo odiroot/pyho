@@ -68,19 +68,25 @@ class BaseClientComm(MessageType):
         if self.store:
             print "Warning: client communicator store not empty."
 
-    def send_request(self, msg, s_id, m_type=None):
-        self.sender.send_json({
-            "data": msg,
-            "id": s_id,
-            "type": m_type,
-        })
+    def send_request(self, msg, s_id, m_type, wait=True):
+        payload = {"data": msg, "id": s_id, "type": m_type}
+        if wait:
+            self.sender.send_json(payload)
+        else:
+            poller = zmq.Poller()
+            poller.register(self.sender, zmq.POLLOUT)
+            if poller.poll(100):
+                self.sender.send_json(payload)
+                return True
+            else:
+                return False
 
     def __validate(self, resp, m_type):
         if resp["type"] != m_type:
             raise MessageTypeError
         return resp["data"]
 
-    def __get_non_blocking(self, s_id, m_type=None):
+    def __get_non_blocking(self, s_id, m_type):
         if s_id in self.store:
             return self.__validate(self.store.pop(s_id), m_type)
         else:
