@@ -13,7 +13,7 @@ from pyevolve import Util
 from pyevolve.GPopulation import GPopulation
 from pyevolve import Consts
 
-from utils import printf, check_stop_flag
+from common.utils import printf, check_stop_flag
 
 
 def stop_flag_criteria(ga_engine):

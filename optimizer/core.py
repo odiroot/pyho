@@ -5,7 +5,7 @@ import sys
 import time
 
 # Insert path to libs directory.
-from utils import libs_to_path
+from common.utils import libs_to_path
 libs_to_path()
 
 from common.utils import Timer, printf, check_stop_flag
