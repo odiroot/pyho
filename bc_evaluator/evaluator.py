@@ -66,9 +66,7 @@ def main(args):
     sc[sc.SAVE_CBLOCK] = handle_save_cblock
     sc[sc.SAVE_XML] = handle_save_xml
 
-    while True:  # The famous Main Loop.
-        # Wait for the request and handle it.
-        sc.all_handle()
+    sc.listen_forever()
 
 
 __all__ = ["main"]

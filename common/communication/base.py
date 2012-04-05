@@ -50,6 +50,11 @@ class BaseServerComm(MessageType):
     def __setitem__(self, m_type, func):
         self.handlers[m_type] = func
 
+    def listen_forever(self):
+        while True:  # The famous Main Loop.
+            # Wait for the request and handle it.
+            self.all_handle()
+
 
 class BaseClientComm(MessageType):
     store = {}
