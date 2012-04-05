@@ -1,7 +1,65 @@
+import time
+import zmq
 import os
 import tempfile
-import zmq
-from base import BaseClientComm
+from base import MessageType, MessageTypeError
+
+
+class BaseClientComm(MessageType):
+    store = {}
+
+    def __init__(self, context=None):
+        self.ctx = context or zmq.Context()
+
+        self.sender = None
+        self.receiver = None
+
+    def close(self, linger=1000):
+        self.sender.setsockopt(zmq.LINGER, linger)
+        self.receiver.setsockopt(zmq.LINGER, linger)
+        self.sender.close()
+        self.receiver.close()
+        if self.store:
+            print "Warning: client communicator store not empty."
+
+    def send_request(self, msg, s_id, m_type, wait=True):
+        payload = {"data": msg, "id": s_id, "type": m_type}
+        if wait:
+            self.sender.send_json(payload)
+        else:
+            poller = zmq.Poller()
+            poller.register(self.sender, zmq.POLLOUT)
+            if poller.poll(100):
+                self.sender.send_json(payload)
+                return True
+            else:
+                return False
+
+    def __validate(self, resp, m_type):
+        if resp["type"] != m_type:
+            raise MessageTypeError
+        return resp["data"]
+
+    def __get_non_blocking(self, s_id, m_type):
+        if s_id in self.store:
+            return self.__validate(self.store.pop(s_id), m_type)
+        else:
+            has_data = bool(self.receiver.getsockopt(zmq.EVENTS) & zmq.POLLIN)
+            if has_data:
+                resp = self.receiver.recv_json()
+                if resp["id"] == s_id:
+                    return self.__validate(resp, m_type)
+                else:
+                    self.store[resp["id"]] = resp
+            return None
+
+    def get_response(self, s_id, m_type, wait=False):
+        while True:
+            resp = self.__get_non_blocking(s_id, m_type)
+            if resp is None and wait:
+                time.sleep(1 / 1000.)
+            else:
+                return resp
 
 
 class LocalClientComm(BaseClientComm):
