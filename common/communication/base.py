@@ -53,7 +53,6 @@ class BaseServerComm(MessageType):
 
 class BaseClientComm(MessageType):
     store = {}
-    POLL_INTERVAL = 1 / 1000
 
     def __init__(self, context=None):
         self.ctx = context or zmq.Context()
@@ -69,36 +68,35 @@ class BaseClientComm(MessageType):
         if self.store:
             print "Warning: client communicator store not empty."
 
-    def request(self, msg, s_id, m_type=None):
+    def send_request(self, msg, s_id, m_type=None):
         self.sender.send_json({
             "data": msg,
             "id": s_id,
             "type": m_type,
         })
 
-    def response(self, s_id, m_type=None):
+    def __validate(self, resp, m_type):
+        if resp["type"] != m_type:
+            raise MessageTypeError
+        return resp["data"]
+
+    def __get_non_blocking(self, s_id, m_type=None):
         if s_id in self.store:
-            resp = self.store.pop(s_id)
-            if resp["type"] != m_type:
-                raise MessageTypeError
-            return resp["data"]
+            return self.__validate(self.store.pop(s_id), m_type)
         else:
             has_data = bool(self.receiver.getsockopt(zmq.EVENTS) & zmq.POLLIN)
             if has_data:
                 resp = self.receiver.recv_json()
                 if resp["id"] == s_id:
-                    if resp["type"] != m_type:
-                        raise MessageTypeError
-                    return resp["data"]
+                    return self.__validate(resp, m_type)
                 else:
                     self.store[resp["id"]] = resp
-                    return None
-            else:
-                return None
+            return None
 
-    def response_wait(self, s_id, m_type=None, sleep=POLL_INTERVAL):
+    def get_response(self, s_id, m_type, wait=False):
         while True:
-            resp = self.response(s_id, m_type)
-            if resp is not None:
+            resp = self.__get_non_blocking(s_id, m_type)
+            if resp is None and wait:
+                time.sleep(1 / 1000.)
+            else:
                 return resp
-            time.sleep(sleep)

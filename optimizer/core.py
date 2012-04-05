@@ -7,7 +7,7 @@ import time
 from utils import libs_to_path
 libs_to_path()
 
-from common.utils import Timer, printf, check_stop_flag
+from common.utils import Timer, printf  # , check_stop_flag
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
@@ -33,11 +33,12 @@ class MemoizedObjective(object):
             while True:
                 if not sent:
                     # Send asynchronous request for evaluation.
-                    self.comm.request({"params": p}, uid, self.comm.DO_EVALUATION)
+                    self.comm.send_request({"params": p}, uid,
+                        self.comm.DO_EVALUATION)
                     sent = True
                 if sent:
                     # Try to retrieve evaluation score from the transport.
-                    res = self.comm.response(uid, self.comm.SCORE)
+                    res = self.comm.get_response(uid, self.comm.SCORE)
                     if res is not None:
                         self.memo[key] = res["score"]
                         yield res["score"]
@@ -112,8 +113,8 @@ def main(args, unknown):
 
     printf("Waiting for initial connection")
     # Fetch constraints from any worker.
-    cc.request("", 0, cc.QUERY_CONSTRAINTS)
-    resp = cc.response_wait(0, cc.RESP_CONSTRAINTS)
+    cc.send_request("", 0, cc.QUERY_CONSTRAINTS)
+    resp = cc.get_response(0, cc.RESP_CONSTRAINTS, wait=True)
 
     no_vars = resp["no_vars"]
     my_min = resp["min_constr"]
@@ -152,15 +153,15 @@ def main(args, unknown):
     # TODO: We don't know if user specified paths
     # Save optimization results CBlock output.
     data = {"params": ga.bestIndividual().getInternalList()}
-    cc.request(data, 1, cc.SAVE_CBLOCK)
-    resp = cc.response_wait(1, cc.CBLOCK_SAVED)
+    cc.send_request(data, 1, cc.SAVE_CBLOCK)
+    resp = cc.get_response(1, cc.CBLOCK_SAVED, wait=True)
     if resp["status"] == 0:
         print "Saved CBlock file."
 
     # XML output.
     data = {"params": ga.bestIndividual().getInternalList()}
-    cc.request(data, 2, cc.SAVE_XML)
-    resp = cc.response_wait(2, cc.XML_SAVED)
+    cc.send_request(data, 2, cc.SAVE_XML)
+    resp = cc.get_response(2, cc.XML_SAVED, wait=True)
     if resp["status"] == 0:
         print "Saved XML file."
 
