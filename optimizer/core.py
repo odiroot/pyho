@@ -55,12 +55,6 @@ def main(args, unknown):
     # 3. After evolution print best info.
     if args.local_workers:  # Local mode.
         # Check sanity.
-        if ("-coil" not in unknown or "-grid" not in unknown
-                or "-fine" not in unknown):
-            printf("You probably missed some important arguments."
-                " Evaluation process(es) is unlikely to start."
-                " Check for -coil, -grid, -fine arguments.")
-
         printf("Starting optimization with local workers (%d)" %
             args.local_workers)
 
