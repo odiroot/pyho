@@ -55,13 +55,21 @@ var handle_evaluate = function(data) {
     params.forEach(function(val, index, array) {
         sum += val;
     });
+
+    var score = Math.abs(sum / params.length - Math.random());
+    return {"score": score};
+};
+
+var handle_save = function(data) {
+    console.log("Dummy saving output for: %s", data.params);
     return {
-        "score": Math.abs(sum / params.length)
-    };
-}
+        "status": "",
+        "files": ["foo.bar"]
+    }
+};
 
 var handle_message = function(msg, publisher) {
-    console.log("Received message: %s", msg.toString());
+    sys.error("Received message: ", msg.toString());
 
     var parsed = JSON.parse(msg);
     var type = parseInt(parsed["type"], 10);
@@ -78,7 +86,10 @@ var handle_message = function(msg, publisher) {
         case MessageType.EVALUATE:
             res = handle_evaluate(data);
             mType = MessageType.RESP_SCORE;
-            console.log("SCORE: %s", res.score);
+        break;
+        case MessageType.SAVE_OUTPUT:
+            res = handle_save(data);
+            mType = MessageType.RESP_SAVE;
         break;
         default:
             console.error("Unknown message type: %s", type);
