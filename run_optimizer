@@ -39,8 +39,8 @@ def optimizer_arguments():
         type=int, help=u"number of GA generations to run")
     parser.add_argument("-popsize", metavar="<value>", dest="popsize",
         type=int, help=u"size of the GA population")
-    parser.add_argument("-allele", metavar="<switch>", dest="allele",
-        type=bool, help=u"Whether to use Allele operators", default=False)
+    parser.add_argument("-allele", action="store_true", dest="allele",
+        help=u"Whether to use Allele operators", default=False)
     # Not much use right now.
     #parser.add_argument("-algorithm", dest="algorithm",
     #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
