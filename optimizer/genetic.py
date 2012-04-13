@@ -61,7 +61,6 @@ def custom_mutator(genome, **kwargs):
                 genome[it] = uniform(mins[it], maxes[it])
                 mutations += 1
     else:
-        assert False
         for it in xrange(int(round(mutations))):
             which_gene = randint(0, size)
             genome[which_gene] = uniform(mins[which_gene], maxes[which_gene])
