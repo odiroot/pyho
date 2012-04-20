@@ -7,16 +7,16 @@ import time
 from common.utils import libs_to_path
 libs_to_path()
 
-from common.utils import Timer, printf, check_stop_flag, default_evaluator_path
+from common.utils import Timer, printf, check_stop_flag
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 from objective import GeneticObjective
+from misc import default_evaluator_path, spawn_workers
 
 
 def main(args, unknown):
     if args.local_workers:  # Local mode.
-        # Check sanity.
         printf("Starting optimization with local workers (%d)" %
             args.local_workers)
 
@@ -26,26 +26,9 @@ def main(args, unknown):
         # Arguments to be passed to evaluator processes.
         evaluator_args = unknown + ["-local-mode", "-local-pull-address",
             cc.push_addr, "-local-publish-address", cc.sub_addr]
-
-        workers = []
-        # Launch desired number of worker processes.
-        if args.evaluator:
-            command = args.evaluator
-        else:
-            command = default_evaluator_path()
-
-        for i in range(args.local_workers):
-            p = subprocess.Popen([command] + evaluator_args,
-                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                #stderr=subprocess.PIPE
-                )
-            workers.append(p)
-
-        # Kill children workers at exit.
-        @atexit.register
-        def stop_workers():
-            for proc in workers:
-                proc.kill()
+        # Launch worker processes.
+        command = args.evaluator or default_evaluator_path()
+        spawn_workers(args.local_workers, command, evaluator_args)
 
     else:  # Network mode.
         printf("Starting optimization with network workers")
