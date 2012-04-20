@@ -14,35 +14,57 @@ from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 
 
-class MemoizedObjective(object):
-    u"Memoized objective helper with generator result."
-    memo = {}
-
+class RemoteObjective(object):
     def __init__(self, comm):
         self.comm = comm
 
-    def objective(self, chromosome):
+
+class MemoObjectiveMixin(object):
+    memo = {}
+
+    def store(self, params, score):
+        key = tuple(params)
+        self.memo[key] = score
+
+    def fetch(self, params):
+        key = tuple(params)
+        return self.memo.get(key)
+
+
+class GeneticObjective(RemoteObjective, MemoObjectiveMixin):
+    def __call__(self, chromosome):
         u"The Genetic Algorithm evaluation function"
         p = chromosome.getInternalList()
-        key = tuple(p)
 
-        if key in self.memo:  # We already had this task.
-            yield self.memo[key]
-        else:  # We have to compute a score.
-            uid = id(chromosome)  # Unique id for messaging.
-            sent = False  # Whether evaluation request is sent.
-            while True:
-                if not sent:
-                    # Send asynchronous request for evaluation.
-                    self.comm.evaluate(p, uid)
-                    sent = True
-                if sent:
-                    # Try to retrieve evaluation score from the transport.
-                    res = self.comm.resp_score(uid)
-                    if res is not None:
-                        self.memo[key] = res["score"]
-                        yield res["score"]
-                yield None
+        score = self.fetch(p)
+        if score is not None:  # We already had this task.
+            yield score
+
+        # We have to compute a score.
+        uid = id(chromosome)  # Unique id for messaging.
+        sent = False  # Whether evaluation request is sent.
+        while True:
+            if not sent:
+                # Send asynchronous request for evaluation.
+                self.comm.evaluate(p, uid)
+                sent = True
+            # Try to retrieve evaluation score from the transport.
+            response = self.comm.resp_score(uid)
+            if response is not None:
+                score = response["score"]
+                self.store(p, score)
+            yield score
+
+
+class LevmarObjective(RemoteObjective, MemoObjectiveMixin):
+    def __call__(self, vector, *args, **kwargs):
+        score = self.fetch(vector)
+        if score is None:
+            uid = id(vector)
+            self.comm.evaluate(list(vector), uid)
+            score = self.comm.resp_score(uid, wait=True)["score"]
+            self.store(vector, score)
+        return [score] * len(vector)
 
 
 def default_evaluator_path():
@@ -130,7 +152,7 @@ def main(args, unknown):
     else:  # Custom, ported genetic operators.
         genome = CustomG1DList(no_vars)
         genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(MemoizedObjective(cc).objective)
+    genome.evaluator.set(GeneticObjective(cc))
     # Set GA engine parameters.
     ga = CustomGSimpleGA(genome, args.seed)
     ga.setPopulationSize(args.popsize or 200)
