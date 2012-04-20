@@ -13,86 +13,142 @@ from objective import GeneticObjective
 from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
 
 
-def main(args, unknown):
-    if args.local_workers:  # Local mode.
-        printf("Starting optimization with local workers (%d)" %
-            args.local_workers)
+class OptimizationStep(object):
+    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag):
+        self.no_vars = no_vars
+        self.mins = mins
+        self.maxes = maxes
+        self.comm = comm
+        self.seed = seed
+        self.stop_flag = stop_flag
 
+    def prepare(self):
+        pass
+
+    def run(self):
+        return None
+
+
+class GeneticOptimization(OptimizationStep):
+    "Genetic optimization step."
+    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag,
+            allele=False, size=200, generations=100):
+        super(GeneticOptimization, self).__init__(no_vars, mins, maxes, comm,
+            seed, stop_flag)
+        self.allele = allele
+        self.size = size
+        self.timer = Timer()
+        self.generations = generations
+        self.prepare()
+
+    def __prepare_genome(self):
+        u"Initialize genome with constraints."
+        if self.allele:  # Built-in allele version.
+            self.genome = AlleleG1DList(self.no_vars, constr_min=self.mins,
+                constr_max=self.maxes)
+        else:  # Custom, ported genetic operators.
+            self.genome = CustomG1DList(self.no_vars)
+            self.genome.setParams(min_constr=self.mins, max_constr=self.maxes)
+        self.genome.evaluator.set(GeneticObjective(self.comm))
+
+    def __prepare_engine(self):
+        u"Prepare the GA engine."
+        # Set GA engine parameters.
+        self.ga = CustomGSimpleGA(self.genome, self.seed)
+        self.ga.setPopulationSize(self.size)
+        self.ga.setGenerations(self.generations)
+        self.ga.setParams(stop_file=self.stop_flag)
+        self.ga.setParams(timer=self.timer)
+
+    def prepare(self):
+        self.__prepare_genome()
+        self.__prepare_engine()
+
+    def run(self):
+        # Fire the Genetic Algorithm Engine.
+        printf("Starting GA: %d generations of %d individuals" % (
+            self.generations, self.size))
+        self.timer.start()
+        self.ga.evolve()
+        self.__post_run()
+        # Return the best parameters found.
+        return list(self.ga.bestIndividual().getInternalList())
+
+    def __post_run(self):
+        stats_step_callback(self.ga)  # Display final statistics.
+        # Evolution is stoped.
+        run_time = self.timer.stop()
+        print "GA finished in %g s." % run_time
+
+
+class HybridOptimizer(object):
+    "The hybrid (two-step) optimization engine."
+    def __init__(self, local=True, local_workers=None, remote_workers=None,
+            custom_evaluator=None, extra_args=None, stop_flag=None, seed=None):
+        self.cc = None  # Client communicator.
+        self.stop_flag = stop_flag
+        self.seed = seed
+        # Initialize relation with workers.
+        if local:
+            self.__local_mode(local_workers, extra_args, custom_evaluator)
+        else:
+            self.__network_mode(remote_workers)
+
+    def __del__(self):
+        # Close communicator.
+        self.cc.close()
+
+    def __local_mode(self, workers, xargs, evaluator):
+        printf("Starting optimization with local workers (%d)" % workers)
         # Prepare the ZeroMQ communication layer.
-        cc = LocalClientComm()
+        self.cc = LocalClientComm()
 
         # Arguments to be passed to evaluator processes.
-        evaluator_args = unknown + ["-local-mode", "-local-pull-address",
-            cc.push_addr, "-local-publish-address", cc.sub_addr]
+        evaluator_args = xargs + ["-local-mode", "-local-pull-address",
+            self.cc.push_addr, "-local-publish-address", self.cc.sub_addr]
         # Launch worker processes.
-        command = args.evaluator or default_evaluator_path()
-        spawn_workers(args.local_workers, command, evaluator_args)
+        command = evaluator or default_evaluator_path()
+        spawn_workers(workers, command, evaluator_args)
 
-    else:  # Network mode.
+    def __network_mode(self, workers):
         printf("Starting optimization with network workers")
-        if not args.remote_workers:
+        if not workers:
             raise RuntimeError("You have to specify a list of remote"
                 " worker addresses")
-
         # Connect to workers with ZeroMQ.
-        addresses = parse_worker_addresses(args.remote_workers)
-        cc = NetworkClientComm(addresses=addresses)
+        self.cc = NetworkClientComm(addresses=parse_worker_addresses(workers))
 
-    # Wait until (presumably) all workers are awake and ready
-    # to avoid unfair distribution of tasks.
-    time.sleep(1)
-    printf("Waiting for initial connection")
+    def __fetch_constraints(self):
+        u"Fetch constraints from any worker."
+        _sent = False
+        while not _sent:
+            _sent = self.cc.get_options(0, wait=False)
+            if check_stop_flag(self.stop_flag):
+                sys.exit(-1)
+        resp = self.cc.resp_options(0, wait=True)
+        self.no_vars = resp["num_params"]
+        self.mins = resp["min_constr"]
+        self.maxes = resp["max_constr"]
 
-    # Fetch constraints from any worker.
-    _sent = False
-    while not _sent:
-        _sent = cc.get_options(0, wait=False)
-        if check_stop_flag(args.stopflag):
-            sys.exit(-1)
-    resp = cc.resp_options(0, wait=True)
+    def prepare_optimization(self):
+        # Wait until (presumably) all workers are awake and ready
+        # to avoid unfair distribution of tasks.
+        time.sleep(1)
+        printf("Waiting for initial connection")
+        self.__fetch_constraints()
+        printf("Received initial data from workers")
 
-    no_vars = resp["num_params"]
-    my_min = resp["min_constr"]
-    my_max = resp["max_constr"]
-    printf("Received initial data from workers")
+    def run(self):
+        self.prepare_optimization()
+        ga_opt = GeneticOptimization(no_var=self.no_vars, min=self.mins,
+            maxes=self.maxes, comm=self.cc, seed=self.seed,
+            stop_flag=self.stop_flag)
+        results = ga_opt.run()
+        self.save_output(results)
 
-    # Prepare the GA engine.
-    # Initialize genome with constraints.
-    if args.allele:  # Built-in allele version.
-        genome = AlleleG1DList(no_vars, constr_min=my_min, constr_max=my_max)
-    else:  # Custom, ported genetic operators.
-        genome = CustomG1DList(no_vars)
-        genome.setParams(min_constr=my_min, max_constr=my_max)
-    genome.evaluator.set(GeneticObjective(cc))
-    # Set GA engine parameters.
-    ga = CustomGSimpleGA(genome, args.seed)
-    ga.setPopulationSize(args.popsize or 200)
-    ga.setGenerations(args.ngen or 100)
-    ga.setParams(stop_file=args.stopflag)
-
-    # Fire the Genetic Algorithm Engine.
-    printf("Starting GA: %d generations of %d individuals" % (ga.nGenerations,
-        ga.getPopulation().popSize))
-    timer = Timer().start()
-    ga.setParams(timer=timer)
-    ga.evolve()
-    stats_step_callback(ga)  # Display final statistics.
-
-    # Evolution is stoped.
-    run_time = timer.stop()
-    print "GA finished in %g s." % run_time
-
-    ## TODO: End of evaluation output and files. ##
-    # bridge.coil_to_print(ga.bestIndividual().getInternalList())
-
-    # Save optimization results CBlock output.
-    cc.save_output(ga.bestIndividual().getInternalList(), 1)
-    resp = cc.resp_save(1, wait=True)
-    if resp["status"] == "":
-        print "Saved files: %s" % ', '.join(resp["files"])
-
-    # Close communicator.
-    cc.close()
-
-
-__all__ = ["main"]
+    def save_output(self, parameters):
+        u"Save optimization results"
+        self.cc.save_output(parameters, 1)
+        response = self.cc.resp_save(1, wait=True)
+        if response["status"] == "":
+            print "Saved files: %s" % ', '.join(response["files"])
