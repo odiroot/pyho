@@ -65,7 +65,7 @@ class GeneticOptimization(OptimizationStep):
         self.__prepare_engine()
 
     def run(self):
-        # Fire the Genetic Algorithm Engine.
+        u"Fire the Genetic Algorithm Engine."
         printf("Starting GA: %d generations of %d individuals" % (
             self.generations, self.size))
         self.timer.start()
@@ -84,10 +84,13 @@ class GeneticOptimization(OptimizationStep):
 class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
     def __init__(self, local=True, local_workers=None, remote_workers=None,
-            custom_evaluator=None, extra_args=None, stop_flag=None, seed=None):
+            custom_evaluator=None, extra_args=None, stop_flag=None, seed=None,
+            ga_iter=None, ga_size=None):
         self.cc = None  # Client communicator.
         self.stop_flag = stop_flag
         self.seed = seed
+        self.ga_iter = ga_iter
+        self.ga_size = ga_size
         # Initialize relation with workers.
         if local:
             self.__local_mode(local_workers, extra_args, custom_evaluator)
@@ -96,7 +99,8 @@ class HybridOptimizer(object):
 
     def __del__(self):
         # Close communicator.
-        self.cc.close()
+        if self.cc:
+            self.cc.close()
 
     def __local_mode(self, workers, xargs, evaluator):
         printf("Starting optimization with local workers (%d)" % workers)
@@ -140,9 +144,13 @@ class HybridOptimizer(object):
 
     def run(self):
         self.prepare_optimization()
-        ga_opt = GeneticOptimization(no_var=self.no_vars, min=self.mins,
-            maxes=self.maxes, comm=self.cc, seed=self.seed,
-            stop_flag=self.stop_flag)
+        args = dict(no_vars=self.no_vars, mins=self.mins, maxes=self.maxes,
+            comm=self.cc, seed=self.seed, stop_flag=self.stop_flag)
+        if self.ga_iter:
+            args["generations"] = self.ga_iter
+        if self.ga_size:
+            args["size"] = self.ga_size
+        ga_opt = GeneticOptimization(**args)
         results = ga_opt.run()
         self.save_output(results)
 
@@ -152,3 +160,6 @@ class HybridOptimizer(object):
         response = self.cc.resp_save(1, wait=True)
         if response["status"] == "":
             print "Saved files: %s" % ', '.join(response["files"])
+
+
+__all__ = ["HybridOptimizer"]
