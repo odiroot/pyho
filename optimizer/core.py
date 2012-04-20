@@ -1,5 +1,3 @@
-import subprocess
-import atexit
 import sys
 import time
 
@@ -12,7 +10,7 @@ from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 from objective import GeneticObjective
-from misc import default_evaluator_path, spawn_workers
+from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
 
 
 def main(args, unknown):
@@ -36,18 +34,9 @@ def main(args, unknown):
             raise RuntimeError("You have to specify a list of remote"
                 " worker addresses")
 
-        # Parse workers addresses.
-        hosts = args.remote_workers.split(",")
-        workers = []
-        for host in hosts:
-            parts = host.split(":")
-            if len(parts) == 3:  # Full format.
-                workers.append(tuple(parts))
-            else:  # Hostname only or wrong format.
-                workers.append((parts[0], "5558", "5559"))
-
         # Connect to workers with ZeroMQ.
-        cc = NetworkClientComm(addresses=workers)
+        addresses = parse_worker_addresses(args.remote_workers)
+        cc = NetworkClientComm(addresses=addresses)
 
     # Wait until (presumably) all workers are awake and ready
     # to avoid unfair distribution of tasks.

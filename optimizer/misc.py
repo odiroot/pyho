@@ -23,3 +23,15 @@ def spawn_workers(number, command, arguments):
     def stop_workers():
         for proc in workers:
             proc.kill()
+
+
+def parse_worker_addresses(source):
+    hosts = source.remote_workers.split(",")
+    workers = []
+    for host in hosts:
+        parts = host.split(":")
+        if len(parts) == 3:  # Full format.
+            workers.append(tuple(parts))
+        else:  # Hostname only or wrong format.
+            workers.append((parts[0], "5558", "5559"))
+    return workers
