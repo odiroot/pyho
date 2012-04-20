@@ -66,3 +66,8 @@ class RedirecredWriter(object):
         text = args[0]
         if text != '\n':
             self.print_func(text)
+
+
+def default_evaluator_path():
+    common_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(os.path.dirname(common_dir), "run_bc_evaluator")

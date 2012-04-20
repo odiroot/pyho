@@ -1,4 +1,3 @@
-import os
 import subprocess
 import atexit
 import sys
@@ -8,74 +7,14 @@ import time
 from common.utils import libs_to_path
 libs_to_path()
 
-from common.utils import Timer, printf, check_stop_flag
+from common.utils import Timer, printf, check_stop_flag, default_evaluator_path
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
-
-
-class RemoteObjective(object):
-    def __init__(self, comm):
-        self.comm = comm
-
-
-class MemoObjectiveMixin(object):
-    memo = {}
-
-    def store(self, params, score):
-        key = tuple(params)
-        self.memo[key] = score
-
-    def fetch(self, params):
-        key = tuple(params)
-        return self.memo.get(key)
-
-
-class GeneticObjective(RemoteObjective, MemoObjectiveMixin):
-    def __call__(self, chromosome):
-        u"The Genetic Algorithm evaluation function"
-        p = chromosome.getInternalList()
-
-        score = self.fetch(p)
-        if score is not None:  # We already had this task.
-            yield score
-
-        # We have to compute a score.
-        uid = id(chromosome)  # Unique id for messaging.
-        sent = False  # Whether evaluation request is sent.
-        while True:
-            if not sent:
-                # Send asynchronous request for evaluation.
-                self.comm.evaluate(p, uid)
-                sent = True
-            # Try to retrieve evaluation score from the transport.
-            response = self.comm.resp_score(uid)
-            if response is not None:
-                score = response["score"]
-                self.store(p, score)
-            yield score
-
-
-class LevmarObjective(RemoteObjective, MemoObjectiveMixin):
-    def __call__(self, vector, *args, **kwargs):
-        score = self.fetch(vector)
-        if score is None:
-            uid = id(vector)
-            self.comm.evaluate(list(vector), uid)
-            score = self.comm.resp_score(uid, wait=True)["score"]
-            self.store(vector, score)
-        return [score] * len(vector)
-
-
-def default_evaluator_path():
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.abspath(os.path.join(this_dir, os.path.pardir,
-        "run_bc_evaluator"))
+from objective import GeneticObjective
 
 
 def main(args, unknown):
-    # TODO:
-    # 3. After evolution print best info.
     if args.local_workers:  # Local mode.
         # Check sanity.
         printf("Starting optimization with local workers (%d)" %
