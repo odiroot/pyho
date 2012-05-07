@@ -9,8 +9,11 @@ from common.utils import Timer, printf, check_stop_flag
 from common.communication import LocalClientComm, NetworkClientComm
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
-from objective import GeneticObjective
+from objective import GeneticObjective, LevmarObjective
 from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
+import pyximport
+pyximport.install()
+from levmar import levmar
 
 
 class OptimizationStep(object):
@@ -81,6 +84,44 @@ class GeneticOptimization(OptimizationStep):
         print "GA finished in %g s." % run_time
 
 
+class LevmarOptimization(OptimizationStep):
+    "Levenberg-Marquardt optimization step."
+    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag, p0=None,
+            max_iter=10):
+        super(LevmarOptimization, self).__init__(no_vars, mins, maxes, comm,
+            seed, stop_flag)
+        self.timer = Timer()
+        # If starting vector is not specified, start with min values.
+        self.p0 = p0 or mins
+        self.max_iter = max_iter
+        self.prepare()
+
+    def prepare(self):
+        # Starting residuals (or observed values).
+        self.y = [0.]
+        self.bounds = zip(self.mins, self.maxes)
+
+    def run(self):
+        printf("Starting LM: %d iterations" % self.max_iter)
+        objective = LevmarObjective(self.comm)
+        self.timer.start()
+        output = levmar(objective, p0=self.p0, y=self.y, bounds=self.bounds,
+            maxit=self.max_iter, cdif=False, eps1=1e-15, eps2=1e-15, eps3=1e-20,
+            full_output=True, breakf=self.__breakf)
+        self.__post_run(output)
+        return list(output.p)
+
+    def __post_run(self, lm_output):
+        run_time = self.timer.stop()
+        print "LM finished in %g s." % run_time
+        print lm_output.info
+
+    def __breakf(self, i, maxit, p, error):
+        if check_stop_flag(self.stop_flag):
+            return 1
+        printf("Iteration %d of %d, ||error|| %g" % (i, maxit, error))
+
+
 class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
     def __init__(self, local=True, local_workers=None, remote_workers=None,
@@ -146,13 +187,23 @@ class HybridOptimizer(object):
         self.prepare_optimization()
         args = dict(no_vars=self.no_vars, mins=self.mins, maxes=self.maxes,
             comm=self.cc, seed=self.seed, stop_flag=self.stop_flag)
+
+        # Prepare and run Genetic step.
+        ga_args = dict(args)
         if self.ga_iter:
-            args["generations"] = self.ga_iter
+            ga_args["generations"] = self.ga_iter
         if self.ga_size:
-            args["size"] = self.ga_size
-        ga_opt = GeneticOptimization(**args)
-        results = ga_opt.run()
-        self.save_output(results)
+            ga_args["size"] = self.ga_size
+        ga_opt = GeneticOptimization(**ga_args)
+        ga_results = ga_opt.run()
+
+        # Prepare and run Levmar step.
+        lm_args = dict(args)
+        # Pass result vector from previous step.
+        lm_args["p0"] = ga_results
+        lm_opt = LevmarOptimization(**lm_args)
+        lm_results = lm_opt.run()
+        self.save_output(lm_results)
 
     def save_output(self, parameters):
         u"Save optimization results"
