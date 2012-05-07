@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class RemoteObjective(object):
     u"Common base for all objectives working on network."
     def __init__(self, comm):
@@ -51,7 +54,9 @@ class LevmarObjective(RemoteObjective, MemoObjectiveMixin):
             self.comm.evaluate(list(vector), uid)
             score = self.comm.resp_score(uid, wait=True)["score"]
             self.store(vector, score)
-        return [score] * len(vector)
+        output = np.ndarray(len(vector))
+        output.fill(score)
+        return output
 
 
 __all__ = ["GeneticObjective", "LevmarObjective"]

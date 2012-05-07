@@ -11,9 +11,12 @@ from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 from objective import GeneticObjective, LevmarObjective
 from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
+
+# LM imports
 import pyximport
 pyximport.install()
 from levmar import levmar
+import numpy as np
 
 
 class OptimizationStep(object):
@@ -92,13 +95,13 @@ class LevmarOptimization(OptimizationStep):
             seed, stop_flag)
         self.timer = Timer()
         # If starting vector is not specified, start with min values.
-        self.p0 = p0 or mins
+        self.p0 = np.array(p0 or mins)
         self.max_iter = max_iter
         self.prepare()
 
     def prepare(self):
         # Starting residuals (or observed values).
-        self.y = [0.]
+        self.y = np.array([0] * self.no_vars)
         self.bounds = zip(self.mins, self.maxes)
 
     def run(self):
@@ -201,6 +204,7 @@ class HybridOptimizer(object):
         lm_args = dict(args)
         # Pass result vector from previous step.
         lm_args["p0"] = ga_results
+        lm_args["max_iter"] = 2
         lm_opt = LevmarOptimization(**lm_args)
         lm_results = lm_opt.run()
         self.save_output(lm_results)
