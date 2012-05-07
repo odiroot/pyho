@@ -117,9 +117,11 @@ cdef class _LMFunction:
         try:
             py_y = PyObject_CallObject(self.func, args)
         except KeyboardInterrupt, e:
+            import os
+            os._exit(-1)
             # It's actually strange that this works.
             # sys.exit() here would throw SystemExit that would be ignored.
-            pass
+
 
         ## Copy the result to `x`
         memcpy(y, py_y.data, n*sizeof(double))
