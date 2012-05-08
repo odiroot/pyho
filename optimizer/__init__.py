@@ -7,5 +7,6 @@ def main(args, unparsed):
         remote_workers=args.remote_workers,
         custom_evaluator=args.evaluator, extra_args=unparsed,
         stop_flag=args.stopflag, seed=args.seed,
-        ga_iter=args.ngen, ga_size=args.popsize)
+        ga_iter=args.ngen, ga_size=args.popsize, ga_allele=args.allele,
+        lm_iter=args.iter)
     optimizer.run()

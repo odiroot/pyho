@@ -9,10 +9,8 @@ def optimizer_arguments():
     parser.epilog = u"""This application is a part of PyHO package."""
 
     # Run settings.
-    parser.add_argument("-log", metavar="<logfile>", dest="logfile",
-        type=str, help=u"log file path")
     parser.add_argument("-stopflag", metavar="<filename>", dest="stopflag",
-        type=str, help=u"path to the stop-signalling file")
+        type=str, help=u"Path to the stop-signalling file")
     parser.add_argument("-evaluator-path", metavar="<path>", dest="evaluator",
         type=str, help=u"Used only in local mode. Path to the evaluator"
             " launcher. If not specified block coil evaluator is assumed.")
@@ -33,17 +31,21 @@ def optimizer_arguments():
             defaults to 5559.""")
 
     # Genetic Algorithm parameters.
-    parser.add_argument("-seed", metavar="<value>", dest="seed",
-        type=int, help=u"start the evolution with a specified random seed")
-    parser.add_argument("-ngen", metavar="<value>", dest="ngen",
-        type=int, help=u"number of GA generations to run")
-    parser.add_argument("-popsize", metavar="<value>", dest="popsize",
-        type=int, help=u"size of the GA population")
-    parser.add_argument("-allele", action="store_true", dest="allele",
+    genetic = parser.add_argument_group("Genetic optimization")
+    genetic.add_argument("-seed", metavar="<value>", dest="seed",
+        type=int, help=u"Start the evolution with a specified random seed")
+    genetic.add_argument("-ngen", metavar="<value>", dest="ngen",
+        type=int, help=u"Number of GA generations to run")
+    genetic.add_argument("-popsize", metavar="<value>", dest="popsize",
+        type=int, help=u"Size of the GA population")
+    genetic.add_argument("-allele", action="store_true", dest="allele",
         help=u"Whether to use Allele operators", default=False)
-    # Not much use right now.
-    #parser.add_argument("-algorithm", dest="algorithm",
-    #    choices=["GASimpleGA"], help=u"genetic algorithm engine")
+
+    # Levmar parameters.
+    levmar = parser.add_argument_group("Levenberg-Marquardt optimization")
+    levmar.add_argument("-iter", metavar="<value>", dest="iter", type=int,
+        help=u"Number of levmar algorithm iterations to run")
+
     return parser
 
 

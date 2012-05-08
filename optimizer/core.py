@@ -14,12 +14,13 @@ class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
     def __init__(self, local=True, local_workers=None, remote_workers=None,
             custom_evaluator=None, extra_args=None, stop_flag=None, seed=None,
-            ga_iter=None, ga_size=None, lm_iter=None):
+            ga_iter=None, ga_size=None, ga_allele=None, lm_iter=None):
         self.cc = None  # Client communicator.
         self.stop_flag = stop_flag
         self.seed = seed
         self.ga_iter = ga_iter
         self.ga_size = ga_size
+        self.ga_allele = ga_allele
         self.lm_iter = lm_iter
         # Initialize relation with workers.
         if local:
@@ -87,6 +88,8 @@ class HybridOptimizer(object):
             ga_args["generations"] = self.ga_iter
         if self.ga_size:
             ga_args["size"] = self.ga_size
+        if self.ga_allele is not None:
+            ga_args["allele"] = self.ga_allele
         ga_opt = GeneticOptimization(**ga_args)
         return ga_opt.run()
 
