@@ -72,8 +72,12 @@ class HybridOptimizer(object):
         self.prepare_optimization()
         args = dict(no_vars=self.no_vars, mins=self.mins, maxes=self.maxes,
             comm=self.cc, stop_flag=self.stop_flag)
+
         ga_results = self.run_genetic(args, **self.extra_args)
+        self.display_info(ga_results)
         lm_results = self.run_levmar(args, ga_results, **self.extra_args)
+        self.display_info(lm_results)
+
         self.save_output(lm_results)
 
     def run_genetic(self, args, **extra):
@@ -100,6 +104,13 @@ class HybridOptimizer(object):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             return lm_opt.run()
+
+    def display_info(self, parameters):
+        u"Asks evaluator for parameters description and displays it."
+        self.cc.get_stats(parameters, "2%d" % id(parameters))
+        response = self.cc.resp_stats("2%d" % id(parameters), wait=True)
+        printf("Statistics for given parameters:")
+        printf(response["stats"])
 
     def save_output(self, parameters):
         u"Save optimization results"

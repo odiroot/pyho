@@ -74,6 +74,13 @@ class BaseClientComm(object):
     def resp_score(self, s_id, **kwargs):
         return self.get_response(s_id, MessageType.RESP_SCORE, **kwargs)
 
+    def get_stats(self, params, s_id, **kwargs):
+        return self.send_request({"params": params}, s_id,
+            MessageType.GET_STATS, **kwargs)
+
+    def resp_stats(self, s_id, **kwargs):
+        return self.get_response(s_id, MessageType.RESP_STATS, **kwargs)
+
     def save_output(self, params, s_id, **kwargs):
         return self.send_request({"params": params}, s_id,
             MessageType.SAVE_OUTPUT, **kwargs)
