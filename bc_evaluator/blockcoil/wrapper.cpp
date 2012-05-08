@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <math.h>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include "wrapper.h"
 #include "ptreal.h"
 #include "latticegrid.h"
@@ -185,15 +187,16 @@ float bFun(real t[]) {
     return obj;
 }
 
-void print_coil(real t[]) {
+const char* print_coil(real t[]) {
     float stddev, result;
     Pt_real bmean;
 
     basic_eval(t, stddev, result, bmean);
-    // TODO: Transfer to Cython
-    cout << "Optimized coil: B_mean= (" << bmean;
-    cout << "), std. dev.= " << stddev;
-    cout << ", err= " << result << endl;
+    std::stringstream out;
+    out << "Optimized coil: B_mean= (" << bmean;
+    out << "), std. dev.= " << stddev;
+    out << ", err= " << result << endl;
+    return out.str().c_str();
 }
 
 void output_cblock(const char* path, real t[]) {

@@ -4,6 +4,7 @@ import sys
 
 cdef extern from *:
     ctypedef float real
+    ctypedef char* const_char_ptr "const char *"
 
 cdef extern from "wrapper.h":
     void redirect_log(char* path)
@@ -18,7 +19,7 @@ cdef extern from "wrapper.h":
     real* get_my_max()
 
     float bFun(real t[])
-    void print_coil(real t[])
+    const_char_ptr print_coil(real t[])
     void output_cblock(char* path, real t[])
     void rebuild_grid(int fine)
     void output_xml(char* path, real t[])
@@ -102,8 +103,9 @@ def bfun(object genome):
 
 def coil_to_print(object genome):
     cdef real* t = list_to_real(genome)
-    print_coil(t)
+    cdef const_char_ptr txt = print_coil(t)
     free(t)
+    return txt
 
 def save_cblock(object path, object genome):
     cdef real* t = list_to_real(genome)

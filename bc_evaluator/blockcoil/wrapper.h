@@ -15,7 +15,7 @@ real* get_my_min();
 real* get_my_max();
 
 float bFun(real t[]);
-void print_coil(real t[]);
+const char* print_coil(real t[]);
 void output_cblock(const char* path, real t[]);
 void rebuild_grid(int fine);
 void output_xml(char* path, real t[]);

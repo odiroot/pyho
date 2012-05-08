@@ -46,7 +46,8 @@ class BlockCoilEvaluator(BaseHandler):
         self.comm.resp_score({"score": score}, s_id)
 
     def handle_get_stats(self, data, s_id):
-        self.comm.resp_stats({"stats": "TODO: Not implemented"}, s_id)
+        info = bridge.coil_to_print(data["params"])
+        self.comm.resp_stats({"stats": info}, s_id)
 
     def handle_save_output(self, data, s_id):
         params = data["params"]
