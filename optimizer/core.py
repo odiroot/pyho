@@ -76,27 +76,30 @@ class HybridOptimizer(object):
         self.prepare_optimization()
         args = dict(no_vars=self.no_vars, mins=self.mins, maxes=self.maxes,
             comm=self.cc, seed=self.seed, stop_flag=self.stop_flag)
+        ga_results = self.run_genetic(args)
+        lm_results = self.run_levmar(args, ga_results)
+        self.save_output(lm_results)
 
-        # Prepare and run Genetic step.
-        ga_args = dict(args)
+    def run_genetic(self, common_args):
+        u"Prepare and run genetic step."
+        ga_args = dict(common_args)
         if self.ga_iter:
             ga_args["generations"] = self.ga_iter
         if self.ga_size:
             ga_args["size"] = self.ga_size
         ga_opt = GeneticOptimization(**ga_args)
-        ga_results = ga_opt.run()
+        return ga_opt.run()
 
-        # Prepare and run Levmar step.
-        lm_args = dict(args)
-        # Pass result vector from previous step.
-        lm_args["p0"] = ga_results
+    def run_levmar(self, common_args, start_vector):
+        u"Prepare and run levmar step."
+        lm_args = dict(common_args)
+        lm_args["p0"] = start_vector
         if self.lm_iter:
-            args["max_iter"] = self.lm_iter
+            lm_args["max_iter"] = self.lm_iter
         lm_opt = LevmarOptimization(**lm_args)
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            lm_results = lm_opt.run()
-        self.save_output(lm_results)
+            return lm_opt.run()
 
     def save_output(self, parameters):
         u"Save optimization results"
