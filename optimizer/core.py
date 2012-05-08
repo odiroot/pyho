@@ -13,18 +13,13 @@ from steps import GeneticOptimization, LevmarOptimization
 class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
     def __init__(self, local=True, local_workers=None, remote_workers=None,
-            custom_evaluator=None, extra_args=None, stop_flag=None, seed=None,
-            ga_iter=None, ga_size=None, ga_allele=None, lm_iter=None):
+            custom_evaluator=None, stop_flag=None, unknown_args=None, **kwargs):
         self.cc = None  # Client communicator.
         self.stop_flag = stop_flag
-        self.seed = seed
-        self.ga_iter = ga_iter
-        self.ga_size = ga_size
-        self.ga_allele = ga_allele
-        self.lm_iter = lm_iter
+        self.extra_args = kwargs
         # Initialize relation with workers.
         if local:
-            self.__local_mode(local_workers, extra_args, custom_evaluator)
+            self.__local_mode(local_workers, unknown_args, custom_evaluator)
         else:
             self.__network_mode(remote_workers)
 
@@ -76,29 +71,31 @@ class HybridOptimizer(object):
     def run(self):
         self.prepare_optimization()
         args = dict(no_vars=self.no_vars, mins=self.mins, maxes=self.maxes,
-            comm=self.cc, seed=self.seed, stop_flag=self.stop_flag)
-        ga_results = self.run_genetic(args)
-        lm_results = self.run_levmar(args, ga_results)
+            comm=self.cc, stop_flag=self.stop_flag)
+        ga_results = self.run_genetic(args, **self.extra_args)
+        lm_results = self.run_levmar(args, ga_results, **self.extra_args)
         self.save_output(lm_results)
 
-    def run_genetic(self, common_args):
+    def run_genetic(self, args, **extra):
         u"Prepare and run genetic step."
-        ga_args = dict(common_args)
-        if self.ga_iter:
-            ga_args["generations"] = self.ga_iter
-        if self.ga_size:
-            ga_args["size"] = self.ga_size
-        if self.ga_allele is not None:
-            ga_args["allele"] = self.ga_allele
+        ga_args = dict(args)
+        if extra["ga_seed"]:
+            ga_args["seed"] = extra["ga_seed"]
+        if extra["ga_iter"]:
+            ga_args["generations"] = extra["ga_iter"]
+        if extra["ga_size"]:
+            ga_args["size"] = extra["ga_size"]
+        if extra["ga_allele"] is not None:
+            ga_args["allele"] = extra["ga_allele"]
         ga_opt = GeneticOptimization(**ga_args)
         return ga_opt.run()
 
-    def run_levmar(self, common_args, start_vector):
+    def run_levmar(self, args, start_vector, **extra):
         u"Prepare and run levmar step."
-        lm_args = dict(common_args)
+        lm_args = dict(args)
         lm_args["p0"] = start_vector
-        if self.lm_iter:
-            lm_args["max_iter"] = self.lm_iter
+        if extra["lm_iter"]:
+            lm_args["max_iter"] = extra["lm_iter"]
         lm_opt = LevmarOptimization(**lm_args)
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")

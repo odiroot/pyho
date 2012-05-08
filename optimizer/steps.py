@@ -13,12 +13,11 @@ import numpy as np
 
 
 class OptimizationStep(object):
-    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag):
+    def __init__(self, no_vars, mins, maxes, comm, stop_flag):
         self.no_vars = no_vars
         self.mins = mins
         self.maxes = maxes
         self.comm = comm
-        self.seed = seed
         self.stop_flag = stop_flag
 
     def prepare(self):
@@ -30,10 +29,11 @@ class OptimizationStep(object):
 
 class GeneticOptimization(OptimizationStep):
     "Genetic optimization step."
-    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag,
+    def __init__(self, no_vars, mins, maxes, comm, stop_flag, seed=False,
             allele=False, size=200, generations=100):
         super(GeneticOptimization, self).__init__(no_vars, mins, maxes, comm,
-            seed, stop_flag)
+            stop_flag)
+        self.seed = seed
         self.allele = allele
         self.size = size
         self.timer = Timer()
@@ -82,10 +82,10 @@ class GeneticOptimization(OptimizationStep):
 
 class LevmarOptimization(OptimizationStep):
     "Levenberg-Marquardt optimization step."
-    def __init__(self, no_vars, mins, maxes, comm, seed, stop_flag, p0=None,
+    def __init__(self, no_vars, mins, maxes, comm, stop_flag, p0=None,
             max_iter=5):
         super(LevmarOptimization, self).__init__(no_vars, mins, maxes, comm,
-            seed, stop_flag)
+            stop_flag)
         self.timer = Timer()
         # If starting vector is not specified, start with min values.
         self.p0 = np.array(p0 or mins)
