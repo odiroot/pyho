@@ -105,7 +105,7 @@ def coil_to_print(object genome):
     cdef real* t = list_to_real(genome)
     cdef const_char_ptr txt = print_coil(t)
     free(t)
-    return txt
+    return str(txt)[:-1]
 
 def save_cblock(object path, object genome):
     cdef real* t = list_to_real(genome)
