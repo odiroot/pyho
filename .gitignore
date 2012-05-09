@@ -11,3 +11,9 @@ GUI/linux_x86/cblockCoil.cblock
 GUI/linux_x86/coilEval.xml
 GUI/linux_x86/coilForCheckShape.param
 GUI/linux_x86/gridForCheckShape.param
+GUI/linux_64/Bfile.txt
+GUI/linux_64/Bgrid.txt
+GUI/linux_64/cblockCoil.cblock
+GUI/linux_64/coilEval.xml
+GUI/linux_64/coilForCheckShape.param
+GUI/linux_64/gridForCheckShape.param

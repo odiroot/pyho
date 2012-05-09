@@ -1,0 +1,12 @@
+#!/bin/bash
+MY_PATH="`dirname \"$0\"`"              # relative
+MY_PATH="`( cd \"$MY_PATH\" && pwd )`"
+
+#echo "${MY_PATH}" >> /tmp/my.path
+OLD=`pwd`
+cd "${MY_PATH}"
+
+export LD_LIBRARY_PATH="${MY_PATH}" 
+exec "${MY_PATH}/Kanal_v1.bin"
+
+cd "${OLD}"
