@@ -13,7 +13,8 @@ from steps import GeneticOptimization, LevmarOptimization
 class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
     def __init__(self, local=True, local_workers=None, remote_workers=None,
-            custom_evaluator=None, stop_flag=None, unknown_args=None, **kwargs):
+            custom_evaluator=None, stop_flag=None, unknown_args=None,
+            **kwargs):
         self.cc = None  # Client communicator.
         self.stop_flag = stop_flag
         self.extra_args = kwargs

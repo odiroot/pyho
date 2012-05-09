@@ -102,8 +102,8 @@ class LevmarOptimization(OptimizationStep):
         objective = LevmarObjective(self.comm)
         self.timer.start()
         output = levmar(objective, p0=self.p0, y=self.y, bounds=self.bounds,
-            maxit=self.max_iter, cdif=False, eps1=1e-15, eps2=1e-15, eps3=1e-20,
-            full_output=True, breakf=self.__breakf)
+            maxit=self.max_iter, cdif=False, eps1=1e-15, eps2=1e-15,
+            eps3=1e-20, full_output=True, breakf=self.__breakf)
         self.__post_run(output)
         return list(output.p)
 
@@ -112,10 +112,11 @@ class LevmarOptimization(OptimizationStep):
         info = lm_output.info
         printf("Iteration %d of %d, ||error|| %g" % (info[2], self.max_iter,
             info[1][0]))
-        print "LM finished in %g s." % run_time
+        print "LM finished in %g s, with reason: %s" % (run_time, info[3])
 
     def __breakf(self, i, maxit, p, error):
         pstr = "Iteration %d of %d, ||error|| %g" % (i, maxit, error)
+        self.timer.lap()
         if i > 0:
             iter_left = maxit - i
             mean_time = self.timer.time_so_far / i
