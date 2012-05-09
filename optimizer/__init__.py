@@ -8,5 +8,5 @@ def main(args, unparsed):
         custom_evaluator=args.evaluator, unknown_args=unparsed,
         stop_flag=args.stopflag, ga_seed=args.seed,
         ga_iter=args.ngen, ga_size=args.popsize, ga_allele=args.allele,
-        lm_iter=args.iter)
+        lm_iter=args.iter, lm_central=args.central)
     optimizer.run()

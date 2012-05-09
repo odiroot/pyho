@@ -45,6 +45,8 @@ def optimizer_arguments():
     levmar = parser.add_argument_group("Levenberg-Marquardt optimization")
     levmar.add_argument("-iter", metavar="<value>", dest="iter", type=int,
         help=u"Number of levmar algorithm iterations to run")
+    levmar.add_argument("-central-difs", dest="central", action="store_true",
+        help=u"Turns of central differences mode in Levmar.")
 
     return parser
 

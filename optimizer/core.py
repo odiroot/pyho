@@ -101,6 +101,8 @@ class HybridOptimizer(object):
         lm_args["p0"] = start_vector
         if extra["lm_iter"]:
             lm_args["max_iter"] = extra["lm_iter"]
+        if extra["lm_central"] is not None:
+            lm_args["central"] = extra["lm_central"]
         lm_opt = LevmarOptimization(**lm_args)
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")

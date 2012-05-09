@@ -83,13 +83,14 @@ class GeneticOptimization(OptimizationStep):
 class LevmarOptimization(OptimizationStep):
     "Levenberg-Marquardt optimization step."
     def __init__(self, no_vars, mins, maxes, comm, stop_flag, p0=None,
-            max_iter=5):
+            max_iter=5, central=False):
         super(LevmarOptimization, self).__init__(no_vars, mins, maxes, comm,
             stop_flag)
         self.timer = Timer()
         # If starting vector is not specified, start with min values.
         self.p0 = np.array(p0 or mins)
         self.max_iter = max_iter
+        self.central = central
         self.prepare()
 
     def prepare(self):
@@ -102,7 +103,7 @@ class LevmarOptimization(OptimizationStep):
         objective = LevmarObjective(self.comm)
         self.timer.start()
         output = levmar(objective, p0=self.p0, y=self.y, bounds=self.bounds,
-            maxit=self.max_iter, cdif=False, eps1=1e-15, eps2=1e-15,
+            maxit=self.max_iter, cdif=self.central, eps1=1e-15, eps2=1e-15,
             eps3=1e-20, full_output=True, breakf=self.__breakf)
         self.__post_run(output)
         return list(output.p)
