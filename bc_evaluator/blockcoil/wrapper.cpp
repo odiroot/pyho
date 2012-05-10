@@ -187,7 +187,7 @@ float bFun(real t[]) {
     return obj;
 }
 
-const char* print_coil(real t[]) {
+string print_coil(real t[]) {
     float stddev, result;
     Pt_real bmean;
 
@@ -196,7 +196,7 @@ const char* print_coil(real t[]) {
     out << "Optimized coil: B_mean= (" << bmean;
     out << "), std. dev.= " << stddev;
     out << ", err= " << result << endl;
-    return out.str().c_str();
+    return out.str();
 }
 
 void output_cblock(const char* path, real t[]) {
