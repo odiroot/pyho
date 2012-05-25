@@ -51,18 +51,3 @@ class Timer(object):
         self.time_so_far += tmp
         return tmp
 
-
-class RedirecredWriter(object):
-    u"An utility to pass (and redirect) all stdout prints to a function."
-    def __init__(self, print_func):
-        self._old_stdout = sys.stdout
-        self.print_func = print_func
-        sys.stdout = self
-
-    def __del__(self):
-        sys.stdout = self._old_stdout
-
-    def write(self, *args):
-        text = args[0]
-        if text != '\n':
-            self.print_func(text)
