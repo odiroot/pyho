@@ -4,5 +4,7 @@
 # PYTHONPATH environment variable is used so it can be used 
 # without PyHO being installed in the system or user Python path.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# For Cython/pyximport support.
+LIBS_DIR="${DIR}/pyho/libs"
 
-PYTHONPATH="${PYTHONPATH}:${DIR}" exec "${DIR}/examples/fmdt/run_evaluator" $@
+PYTHONPATH="${PYTHONPATH}:${DIR}:${LIBS_DIR}" exec "${DIR}/examples/fmdt/run_evaluator" $@

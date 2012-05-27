@@ -1,7 +1,3 @@
-from pyho.common.utils import libs_to_path
-libs_to_path()  # Insert path to libs directory.
-# TODO: Handle each dependency separately
-
 import pyximport
 pyximport.install()
 
