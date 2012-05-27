@@ -1,4 +1,4 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-PYTHONPATH="${PYTHONPATH}:${DIR}" exec "${DIR}/pyho/run.py" $@
+PYTHONPATH="${PYTHONPATH}:${DIR}" /usr/bin/env python -m pyho.run $@
