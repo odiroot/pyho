@@ -1,19 +1,8 @@
-#!/usr/bin/env python
-u"""
-    Runs blockcoil evaluator based on FMDT coil evaluator.
+#!/bin/bash
+# Runs blockcoil evaluator based on FMDT coil evaluator.
+#
+# PYTHONPATH environment variable is used so it can be used 
+# without PyHO being installed in the system or user Python path.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-    PYTHONPATH environment variable is used so it can be used 
-    without PyHO being installed in the system or user Python path.
-"""
-import os
-import sys
-
-this_dir = os.path.dirname(os.path.abspath(__file__))
-bc_evaluator = os.path.join(this_dir, "examples", "fmdt", "run_evaluator")
-python_path = "%s:%s" % (
-    os.environ.get("PYTHONPATH", ""),
-    this_dir
-)
-
-os.execve(bc_evaluator, sys.argv[:], {"PYTHONPATH": python_path})
-
+PYTHONPATH="${PYTHONPATH}:${DIR}" exec "${DIR}/examples/fmdt/run_evaluator" $@

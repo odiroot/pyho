@@ -16,7 +16,7 @@ def libs_to_path():
     base_dir = os.path.abspath(os.path.join(current_dir, os.path.pardir))
     libs_dir = os.path.join(base_dir, "libs")
     if libs_dir not in sys.path:
-        sys.path.insert(0, libs_dir)
+        sys.path.append(libs_dir)
 
 
 def check_stop_flag(path):
