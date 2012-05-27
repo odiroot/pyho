@@ -35,7 +35,7 @@ If you want to use hybrid optimization mode make sure you also have:
 
 PyHO also uses following Python packages:
 
-* ``Cython``
+* ``Cython`` (version at least 0.16)
 * ``pyximport``
 * ``PyEvolve``
 * ``levmar`` (modified version supporting user initiated breaks)
