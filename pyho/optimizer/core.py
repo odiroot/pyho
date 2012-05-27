@@ -6,21 +6,21 @@ from pyho.common.utils import libs_to_path, check_stop_flag
 libs_to_path()
 from pyho.common.utils import printf
 from pyho.common.communication import LocalClientComm, NetworkClientComm
-from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
+from misc import spawn_workers, parse_worker_addresses
 from steps import GeneticOptimization, LevmarOptimization
 
 
 class HybridOptimizer(object):
     "The hybrid (two-step) optimization engine."
-    def __init__(self, local=True, local_workers=None, remote_workers=None,
-            custom_evaluator=None, stop_flag=None, unknown_args=None,
+    def __init__(self, evaluator_path=None, local=True, local_workers=None, 
+            remote_workers=None, stop_flag=None, unknown_args=None,
             **kwargs):
         self.cc = None  # Client communicator.
         self.stop_flag = stop_flag
         self.extra_args = kwargs
         # Initialize relation with workers.
         if local:
-            self.__local_mode(local_workers, unknown_args, custom_evaluator)
+            self.__local_mode(local_workers, unknown_args, evaluator_path)
         else:
             self.__network_mode(remote_workers)
 
@@ -29,7 +29,10 @@ class HybridOptimizer(object):
         if self.cc:
             self.cc.close()
 
-    def __local_mode(self, workers, xargs, evaluator):
+    def __local_mode(self, workers, xargs, evaluator_path):
+        if evaluator_path is None:
+            raise ValueError("You have to specify a path to the evaluator"
+                " while running in local mode.")
         printf("Starting optimization with local workers (%d)" % workers)
         # Prepare the ZeroMQ communication layer.
         self.cc = LocalClientComm()
@@ -38,8 +41,7 @@ class HybridOptimizer(object):
         evaluator_args = xargs + ["-local-mode", "-local-pull-address",
             self.cc.push_addr, "-local-publish-address", self.cc.sub_addr]
         # Launch worker processes.
-        command = evaluator or default_evaluator_path()
-        spawn_workers(workers, command, evaluator_args)
+        spawn_workers(workers, evaluator_path, evaluator_args)
 
     def __network_mode(self, workers):
         printf("Starting optimization with network workers")
@@ -83,6 +85,7 @@ class HybridOptimizer(object):
 
     def run_genetic(self, args, **extra):
         u"Prepare and run genetic step."
+        # Translate all additional arguments that are understood in this step.
         ga_args = dict(args)
         if extra["ga_seed"]:
             ga_args["seed"] = extra["ga_seed"]
@@ -92,8 +95,9 @@ class HybridOptimizer(object):
             ga_args["size"] = extra["ga_size"]
         if extra["ga_allele"] is not None:
             ga_args["allele"] = extra["ga_allele"]
+        # Run genetic algorithm optimization step...
         ga_opt = GeneticOptimization(**ga_args)
-        return ga_opt.run()
+        return ga_opt.run()  # Return optimized parameters vector.
 
     def run_levmar(self, args, start_vector, **extra):
         u"Prepare and run levmar step."
