@@ -6,8 +6,8 @@
 # ----------------------------------------------------------------------
 import os
 
-
-PACKAGE_PATH = 'levmar_mod'
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+PACKAGE_PATH = os.path.join(THIS_DIR, 'levmar_mod')
 LIBRARY_DIR = os.path.join(PACKAGE_PATH, 'levmar-2.5')
 
 
@@ -53,7 +53,7 @@ def configuration(parent_package='', top_path=None):
     return config
 
 
-if __name__ == '__main__':
+def main():
     from numpy.distutils.core import setup
     setup(
         configuration=configuration,
@@ -62,5 +62,9 @@ if __name__ == '__main__':
         author_email='tkanmae@gmail.com',
         maintainer="Michal Odnous",
         maintainer_email="odnousm@iem.pw.edu.pl",
-        licence='GNU General Public Licence v2',
+        license='GNU General Public Licence v2',
     )
+
+
+if __name__ == '__main__':
+    main()
