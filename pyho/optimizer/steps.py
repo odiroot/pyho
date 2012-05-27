@@ -8,7 +8,7 @@ from objective import GeneticObjective, LevmarObjective
 # LM imports
 import pyximport
 pyximport.install()
-from levmar import levmar
+from levmar_mod import levmar
 import numpy as np
 
 
