@@ -1,6 +1,7 @@
-======================================
-PyHO - Hybrid coil optimizer in Python
-======================================
+
+=================================
+PyHO - Hybrid optimizer in Python
+=================================
 
 PyHO is a prototype of an universal two-stage optimizer written in Python.
 
