@@ -2,8 +2,8 @@
 PyHO - Hybrid coil optimizer in Python
 ======================================
 
-This project at its current state is a Python port (and a wrapper) of the
-original C++ optimizer module from `FMDT` (Flow Meter Design Tool) project.
+This project at its current state is based on the original C++ optimizer module 
+from `FMDT` (Flow Meter Design Tool) project.
 
 Current status
 --------------
@@ -17,8 +17,6 @@ Current status
     - `Network mode` with arbitrary number of worker nodes
 - Currently optimizer and worker processes need access to the same file system (passing files through the network channel is not implemented nor designed)
 - Optimizer can be successfully launched by the `FMDT` GUI.
-    - Optimization progress is being displayed.
-    - Output XML/CBL files are being saved (work in progress).
 
 
 Dependencies
@@ -56,7 +54,9 @@ You can start the optimizer directly by launching ``run_optimizer`` Python
 script from the root project directory. Running it with ``--help`` option
 will show all available options.
 
-You can also use files from ``assets`` as an example input for the optimizer.
+You can use example evaluator based on FMDT project by using ``run_bc_evaluator``
+shell script. There are example coil/grid definition files located in ``assets`` 
+directory under ``examples/fmdt`` path.
 
-There is a 32-bit Linux precompiled version of `FMDT` GUI application packaged
-in a ``GUI/linux_x86`` directory. Run it by calling ``Kanal_v1`` shell script.
+There are 32-bit Linux and 64-bit Linux precompiled binaries of `FMDT` GUI application packaged
+in a ``GUI`` directory. Run it by calling ``Kanal_v1`` shell script.
