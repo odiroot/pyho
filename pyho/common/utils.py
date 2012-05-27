@@ -15,6 +15,9 @@ def libs_to_path():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.abspath(os.path.join(current_dir, os.path.pardir))
     libs_dir = os.path.join(base_dir, "libs")
+    # Do not do anything if libs are not present.
+    if not os.path.isdir(libs_dir):
+        return
     if libs_dir not in sys.path:
         sys.path.append(libs_dir)
 

@@ -1,4 +1,4 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-exec "${DIR}/pyho/run_optimizer" $@
+PYTHONPATH="${PYTHONPATH}:${DIR}" exec "${DIR}/pyho/run_optimizer" $@
