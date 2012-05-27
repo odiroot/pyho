@@ -10,18 +10,18 @@ setup(
     description="Hybrid optimization system.",
     version=pyho.__version__,
 
-    packages=find_packages(),
-    long_description=open(join(dirname(__file__), "README.txt")).read(),
-    entry_points={
-        "console_scripts": ["run_pyho = pyho.run:main"]
-    },
     dependency_links=[
         "http://pyevolve.sourceforge.net/distribution/0_6rc1/Pyevolve-0.6rc1.tar.gz"
     ],
     install_requires=[
         "pyzmq>=2.1.9",
         "numpy",
-        "Cython>=0.16",
         "PyEvolve>=0.6rc1",
     ],
+
+    packages=find_packages(),
+    long_description=open(join(dirname(__file__), "README.txt")).read(),
+    entry_points={
+        "console_scripts": ["run_pyho = pyho.run:main"]
+    },
 )

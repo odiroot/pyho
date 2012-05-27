@@ -1,15 +1,26 @@
+# Try importing modified levmar from global path.
+try:
+    from levmar_mod import levmar
+    LEVMAR_OK = True
+except ImportError:
+    LEVMAR_OK = False
+
 # Insert path to libs directory.
 from pyho.common.utils import libs_to_path
 libs_to_path()
+
 from pyho.common.utils import Timer, printf, check_stop_flag
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 from objective import GeneticObjective, LevmarObjective
-# LM imports
-import pyximport
-pyximport.install()
-from levmar_mod import levmar
 import numpy as np
+
+# Fall back to import from bundled libs.
+if not LEVMAR_OK:
+    # LM imports
+    import pyximport
+    pyximport.install()
+    from levmar_mod import levmar
 
 
 class OptimizationStep(object):
