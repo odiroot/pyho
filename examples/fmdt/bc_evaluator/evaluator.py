@@ -1,4 +1,4 @@
-from common.utils import libs_to_path
+from pyho.common.utils import libs_to_path
 libs_to_path()  # Insert path to libs directory.
 # TODO: Handle each dependency separately
 
@@ -6,7 +6,7 @@ import pyximport
 pyximport.install()
 
 import bridge
-from common.communication import (LocalServerComm, NetworkServerComm,
+from pyho.common.communication import (LocalServerComm, NetworkServerComm,
     BaseHandler)
 
 
