@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-from optimizer import main
+from optimizer import HybridOptimizer
 
 
 def optimizer_arguments():
@@ -51,6 +51,18 @@ def optimizer_arguments():
     return parser
 
 
-if __name__ == '__main__':
+def main():
     args, unknown = optimizer_arguments().parse_known_args()
-    main(args, unknown)
+
+    local = args.local_workers is not None
+    optimizer = HybridOptimizer(evaluator_path=args.evaluator, local=local, 
+        local_workers=args.local_workers, remote_workers=args.remote_workers,
+        unknown_args=unknown, stop_flag=args.stopflag, ga_seed=args.seed,
+        ga_iter=args.ngen, ga_size=args.popsize, ga_allele=args.allele,
+        lm_iter=args.iter, lm_central=args.central)
+    optimizer.run()
+
+
+if __name__ == '__main__':
+    main()
+
