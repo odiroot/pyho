@@ -1,7 +1,7 @@
 # Insert path to libs directory.
-from common.utils import libs_to_path
+from pyho.common.utils import libs_to_path
 libs_to_path()
-from common.utils import Timer, printf, check_stop_flag
+from pyho.common.utils import Timer, printf, check_stop_flag
 from genetic import CustomG1DList, CustomGSimpleGA, stats_step_callback
 from genetic import AlleleG1DList
 from objective import GeneticObjective, LevmarObjective

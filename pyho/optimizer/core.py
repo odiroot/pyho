@@ -2,10 +2,10 @@ import sys
 import time
 import warnings
 # Insert path to libs directory.
-from common.utils import libs_to_path, check_stop_flag
+from pyho.common.utils import libs_to_path, check_stop_flag
 libs_to_path()
-from common.utils import printf
-from common.communication import LocalClientComm, NetworkClientComm
+from pyho.common.utils import printf
+from pyho.common.communication import LocalClientComm, NetworkClientComm
 from misc import default_evaluator_path, spawn_workers, parse_worker_addresses
 from steps import GeneticOptimization, LevmarOptimization
 
