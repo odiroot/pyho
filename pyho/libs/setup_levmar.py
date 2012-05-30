@@ -8,7 +8,7 @@ import os
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 PACKAGE_PATH = os.path.join(THIS_DIR, 'levmar_mod')
-LIBRARY_DIR = os.path.join(PACKAGE_PATH, 'levmar-2.5')
+LIBRARY_DIR = os.path.join(THIS_DIR, 'levmar_mod/levmar-2.5')
 
 
 def get_extension_sources():
