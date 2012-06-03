@@ -3,7 +3,9 @@ u"""
     This example doesn't depend on PyHO libraries -- it's meant to
     be a standalone testing tool.
 """
+import os
 import zmq
+from tempfile import mkstemp
 
 
 # A ZeroMQ global context.
@@ -42,6 +44,7 @@ class RosenbrockEvaluator(object):
         self.listener = ctx.socket(zmq.PULL)
         # ZMQ socket publishing results.
         self.publisher = ctx.socket(zmq.PUB)
+        self.publisher.setsockopt(zmq.IDENTITY, "rosenbrock_ex_pub")
         # Depending on the mode connect to a node or start listening.
         print "Starting Rosenbrock evalutor",
         if local_mode:
@@ -66,6 +69,9 @@ class RosenbrockEvaluator(object):
         u"Handle request from the optimizer, prepare response."
         handler_map = {
             MessageType.GET_OPTIONS: self.handle_options,
+            MessageType.EVALUATE: self.handle_evaluation,
+            MessageType.GET_STATS: self.handle_stats,
+            MessageType.SAVE_OUTPUT: self.handle_output,
         }
 
         # Call the handler for a given message type, collect response data.
@@ -93,4 +99,45 @@ class RosenbrockEvaluator(object):
             "num_params": self.NUM_PARAMS,
             "min_constr": self.CONSTRAINTS[0],
             "max_constr": self.CONSTRAINTS[1],
+        }
+
+    def handle_evaluation(self, data):
+        u"Handle request for parameters evaluation."
+        print "Evaluating", data["params"]
+        return MessageType.RESP_SCORE, {
+            "score": rosenbrock(*data["params"])
+        }
+
+    def handle_stats(self, data):
+        u"Handle request for textual representation of given parameters."
+        params = data["params"]
+        score = rosenbrock(*params)
+        return MessageType.RESP_STATS, {
+            "stats": "Best solution: %s, evaluation score: %g" % (params,
+                score)
+        }
+
+    def handle_output(self, data):
+        u"Handle request for saving results."
+        params = data["params"]
+        score = rosenbrock(*params)
+
+        # Try opening temporary file for results.
+        try:
+            fd, path = mkstemp(prefix="rosenbrock", text=True)
+            output = os.fdopen(fd, "w")
+        except (ValueError, IOError, OSError), e:
+            # Something bad happened - send error message.
+            error = str(e)
+            saved = []
+        else:  # Everything's ok. Save file and clean.
+            error = ""   # No error.
+            saved = [path]
+            # Write parameters, new line, evaluation score.
+            output.write("%g, %g\n%g\n" % (params[0], params[1], score))
+            output.close()
+
+        return MessageType.RESP_SAVE, {
+            "status": error,
+            "files": saved,
         }
