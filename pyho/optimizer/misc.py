@@ -1,4 +1,3 @@
-import os
 import subprocess
 import atexit
 
@@ -21,7 +20,7 @@ def spawn_workers(number, command, arguments):
 
 
 def parse_worker_addresses(source):
-    hosts = source.remote_workers.split(",")
+    hosts = source.split(",")
     workers = []
     for host in hosts:
         parts = host.split(":")
