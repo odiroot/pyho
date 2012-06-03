@@ -103,7 +103,6 @@ class RosenbrockEvaluator(object):
 
     def handle_evaluation(self, data):
         u"Handle request for parameters evaluation."
-        print "Evaluating", data["params"]
         return MessageType.RESP_SCORE, {
             "score": rosenbrock(*data["params"])
         }
