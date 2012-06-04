@@ -38,7 +38,18 @@ class RosenbrockEvaluator(object):
         [100., 100.],
     ]
 
-    def __init__(self, local_mode=False, addresses=None, ports=None):
+    def __init__(self, local_mode=False, addresses=None, ports=None, 
+            max_x=None, min_x=None, max_y=None, min_y=None):
+        # Store constraints or fall back to defaults.
+        self.min_constr = [
+            min_x if min_x is not None else self.CONSTRAINTS[0][0],
+            min_y if min_y is not None else self.CONSTRAINTS[0][1],
+        ]
+        self.max_constr = [
+            max_x if max_x is not None else self.CONSTRAINTS[1][0],
+            max_y if max_y is not None else self.CONSTRAINTS[1][1],
+        ]
+
         # Set up communication.
         # ZMQ socket listening for commands.
         self.listener = ctx.socket(zmq.PULL)
@@ -97,8 +108,8 @@ class RosenbrockEvaluator(object):
         u"Handle request for optimization options."
         return MessageType.RESP_OPTIONS, {
             "num_params": self.NUM_PARAMS,
-            "min_constr": self.CONSTRAINTS[0],
-            "max_constr": self.CONSTRAINTS[1],
+            "min_constr": self.min_constr,
+            "max_constr": self.max_constr,
         }
 
     def handle_evaluation(self, data):
