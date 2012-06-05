@@ -55,7 +55,6 @@ class RosenbrockEvaluator(object):
         self.listener = ctx.socket(zmq.PULL)
         # ZMQ socket publishing results.
         self.publisher = ctx.socket(zmq.PUB)
-        self.publisher.setsockopt(zmq.IDENTITY, "rosenbrock_ex_pub")
         # Depending on the mode connect to a node or start listening.
         print "Starting Rosenbrock evalutor",
         if local_mode:
